@@ -199,6 +199,16 @@ const pool = mysql.createPool({
     : undefined,
 });
 
+// Test database connection on startup
+pool.getConnection()
+  .then(conn => {
+    console.log('Database connected successfully');
+    conn.release();
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err);
+  });
+
 app.get('/api/seasonal-batting-stats', async (req, res) => {
   try {
     const seasonId = req.query.seasonId ? Number(req.query.seasonId) : null;

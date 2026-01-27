@@ -14,7 +14,7 @@ steps:
       - 'deploy'
       - 'statcalculator'
       - '--image=gcr.io/$PROJECT_ID/statcalculator'
-      - '--region=us-central1'
+      - '--region=us-east4'
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--port=4000'
