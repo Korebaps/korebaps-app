@@ -35,7 +35,7 @@ steps:
       - 'DB_SSL=true'
       - 'PORT=4000'
       - 'DB_SSL_CA=ca.pem'
-      - 'DB_SSL_REJECT_UNAUTHORIZED=true'
+      - 'DB_SSL_REJECT_UNAUTHORIZED=false'
       - 'REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
 
 availableSecrets:

@@ -1648,6 +1648,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', port });
 });
 
+// Debug endpoint to check environment variables
+app.get('/debug-env', (req, res) => {
+  res.json({
+    DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
+    DB_PORT: process.env.DB_PORT ? 'SET' : 'NOT SET',
+    DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET',
+    DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
+    DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
+    DB_SSL: process.env.DB_SSL,
+    PORT: process.env.PORT,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET'
+  });
+});
+
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
