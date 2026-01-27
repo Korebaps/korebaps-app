@@ -23,7 +23,7 @@ steps:
       - '--timeout=60s'
       - '--concurrency=80'
       - '--max-instances=100'
-      - '--set-secrets'
+      - '--set-secret-env-vars'
       - 'DB_HOST=db-host:latest'
       - 'DB_PORT=db-port:latest'
       - 'DB_NAME=db-name:latest'
@@ -35,9 +35,8 @@ steps:
       - 'DB_SSL=true'
       - 'PORT=4000'
       - 'DB_SSL_CA=ca.pem'
-      - 'DB_SSL_REJECT_UNAUTHORIZED=false'
+      - 'DB_SSL_REJECT_UNAUTHORIZED=true'
       - 'REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
-      - '--update-secrets'
 
 availableSecrets:
   - secretManager:
