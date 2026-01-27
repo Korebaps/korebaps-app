@@ -1,0 +1,68 @@
+steps:
+  # Build the application image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/statcalculator', '.']
+  
+  # Push the image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/statcalculator']
+  
+  # Deploy to Cloud Run with secrets
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'statcalculator'
+      - '--image=gcr.io/$PROJECT_ID/statcalculator'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=60s'
+      - '--concurrency=80'
+      - '--max-instances=100'
+      - '--set-secrets'
+      - 'DB_HOST=db-host:latest'
+      - 'DB_PORT=db-port:latest'
+      - 'DB_NAME=db-name:latest'
+      - 'DB_USER=db-user:latest'
+      - 'DB_PASSWORD=db-password:latest'
+      - 'ADMIN_PASSWORD=admin-password:latest'
+      - 'REACT_APP_API_BASE_URL=react-app-api-base-url:latest'
+      - 'REACT_APP_YOUTUBE_RSS_URL=react-app-youtube-rss-url:latest'
+      - '--set-env-vars'
+      - 'DB_SSL=true'
+      - 'PORT=4000'
+      - 'DB_SSL_CA=ca.pem'
+      - 'DB_SSL_REJECT_UNAUTHORIZED=true'
+
+availableSecrets:
+  - secretManager:
+      secretName: db-host
+      version: latest
+  - secretManager:
+      secretName: db-port
+      version: latest
+  - secretManager:
+      secretName: db-name
+      version: latest
+  - secretManager:
+      secretName: db-user
+      version: latest
+  - secretManager:
+      secretName: db-password
+      version: latest
+  - secretManager:
+      secretName: admin-password
+      version: latest
+  - secretManager:
+      secretName: react-app-api-base-url
+      version: latest
+  - secretManager:
+      secretName: react-app-youtube-rss-url
+      version: latest
+
+images:
+  - 'gcr.io/$PROJECT_ID/statcalculator'
