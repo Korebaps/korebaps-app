@@ -7,7 +7,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/statcalculator']
   
-  # Deploy to Cloud Run with secrets
+  # Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
@@ -23,14 +23,13 @@ steps:
       - '--timeout=60s'
       - '--concurrency=80'
       - '--max-instances=100'
-      - '--set-secret-env-vars'
+      - '--set-secrets'
       - 'DB_HOST=db-host:latest'
       - 'DB_PORT=db-port:latest'
       - 'DB_NAME=db-name:latest'
       - 'DB_USER=db-user:latest'
       - 'DB_PASSWORD=db-password:latest'
       - 'ADMIN_PASSWORD=admin-password:latest'
-      - 'REACT_APP_YOUTUBE_RSS_URL=react-app-youtube-rss-url:latest'
       - '--set-env-vars'
       - 'DB_SSL=true'
       - 'PORT=4000'
@@ -56,9 +55,6 @@ availableSecrets:
       version: latest
   - secretManager:
       secretName: admin-password
-      version: latest
-  - secretManager:
-      secretName: react-app-youtube-rss-url
       version: latest
 
 images:
