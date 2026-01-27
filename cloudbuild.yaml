@@ -12,7 +12,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'statcalculator'
+      - 'korebaps-app'
       - '--image=gcr.io/$PROJECT_ID/statcalculator'
       - '--region=us-east4'
       - '--platform=managed'
@@ -37,6 +37,7 @@ steps:
       - 'DB_SSL_CA=ca.pem'
       - 'DB_SSL_REJECT_UNAUTHORIZED=false'
       - 'REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
+      - '--update-secrets'
 
 availableSecrets:
   - secretManager:
