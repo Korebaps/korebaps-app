@@ -8,6 +8,16 @@ const https = require('https');
 const crypto = require('crypto');
 const path = require('path');
 
+// Debug: Log environment variables (without sensitive data)
+console.log('Environment check:');
+console.log('DB_HOST:', process.env.DB_HOST ? 'SET' : 'NOT SET');
+console.log('DB_PORT:', process.env.DB_PORT ? 'SET' : 'NOT SET');
+console.log('DB_NAME:', process.env.DB_NAME ? 'SET' : 'NOT SET');
+console.log('DB_USER:', process.env.DB_USER ? 'SET' : 'NOT SET');
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
+console.log('DB_SSL:', process.env.DB_SSL);
+console.log('PORT:', process.env.PORT);
+
 const app = express();
 app.use(cors());
 app.use(express.json());
