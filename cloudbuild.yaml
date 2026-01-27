@@ -7,24 +7,20 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/korebaps-app']
   
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run using script
   - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
     args:
-      - 'run'
-      - 'deploy'
-      - 'korebaps-app'
-      - '--image=gcr.io/$PROJECT_ID/korebaps-app'
-      - '--region=us-east4'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
-      - '--port=4000'
-      - '--memory=1Gi'
-      - '--cpu=1'
-      - '--timeout=60s'
-      - '--concurrency=80'
-      - '--max-instances=100'
-      - '--set-secret-env-vars=DB_HOST=db-host:latest,DB_PORT=db-port:latest,DB_NAME=db-name:latest,DB_USER=db-user:latest,DB_PASSWORD=db-password:latest,ADMIN_PASSWORD=admin-password:latest'
-      - '--set-env-vars=DB_SSL=true,PORT=4000,DB_SSL_CA=ca.pem,DB_SSL_REJECT_UNAUTHORIZED=true,REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
+      - '-c'
+      - |
+        gcloud run deploy korebaps-app \
+          --image=gcr.io/$PROJECT_ID/korebaps-app \
+          --region=us-east4 \
+          --platform=managed \
+          --allow-unauthenticated \
+          --port=4000 \
+          --set-secret-env-vars=DB_HOST=db-host:latest,DB_PORT=db-port:latest,DB_NAME=db-name:latest,DB_USER=db-user:latest,DB_PASSWORD=db-password:latest,ADMIN_PASSWORD=admin-password:latest \
+          --set-env-vars=DB_SSL=true,PORT=4000,DB_SSL_CA=ca.pem,DB_SSL_REJECT_UNAUTHORIZED=true,REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app
 
 images:
   - 'gcr.io/$PROJECT_ID/korebaps-app'
