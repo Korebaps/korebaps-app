@@ -23,7 +23,7 @@ steps:
       - '--timeout=60s'
       - '--concurrency=80'
       - '--max-instances=100'
-      - '--set-secrets'
+      - '--set-secret-env-vars'
       - 'DB_HOST=db-host:latest'
       - 'DB_PORT=db-port:latest'
       - 'DB_NAME=db-name:latest'
@@ -36,26 +36,6 @@ steps:
       - 'DB_SSL_CA=ca.pem'
       - 'DB_SSL_REJECT_UNAUTHORIZED=true'
       - 'REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
-
-availableSecrets:
-  - secretManager:
-      secretName: db-host
-      version: latest
-  - secretManager:
-      secretName: db-port
-      version: latest
-  - secretManager:
-      secretName: db-name
-      version: latest
-  - secretManager:
-      secretName: db-user
-      version: latest
-  - secretManager:
-      secretName: db-password
-      version: latest
-  - secretManager:
-      secretName: admin-password
-      version: latest
 
 images:
   - 'gcr.io/$PROJECT_ID/statcalculator'
