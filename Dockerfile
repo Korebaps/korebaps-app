@@ -16,8 +16,8 @@ RUN cd my-app && npm install
 COPY server/ .
 COPY my-app/ ./my-app/
 
-# Build the React app
-RUN cd my-app && npm run build
+# Build the React app with correct API URL
+RUN cd my-app && REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app npm run build
 
 # Copy built app to server public directory
 RUN cp -r my-app/build ./public
