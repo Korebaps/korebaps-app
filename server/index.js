@@ -1668,6 +1668,55 @@ app.get('/debug-env', (req, res) => {
   });
 });
 
+// Debug endpoint to test database connection
+app.get('/debug-db', async (req, res) => {
+  try {
+    console.log('Testing database connection...');
+    console.log('DB_HOST:', process.env.DB_HOST);
+    console.log('DB_PORT:', process.env.DB_PORT);
+    console.log('DB_NAME:', process.env.DB_NAME);
+    console.log('DB_USER:', process.env.DB_USER);
+    console.log('DB_SSL:', process.env.DB_SSL);
+    console.log('DB_SSL_CA:', process.env.DB_SSL_CA);
+    
+    // Test basic connection
+    const connection = await pool.getConnection();
+    console.log('Database connection successful!');
+    
+    // Test a simple query
+    const [rows] = await connection.execute('SELECT 1 as test');
+    connection.release();
+    
+    res.json({
+      status: 'success',
+      message: 'Database connection working',
+      testQuery: rows,
+      sslConfig: {
+        enabled: sslEnabled,
+        caPath: sslCaPath,
+        rejectUnauthorized,
+        caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
+      }
+    });
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.json({
+      status: 'error',
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage,
+      sslConfig: {
+        enabled: sslEnabled,
+        caPath: sslCaPath,
+        rejectUnauthorized,
+        caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
+      }
+    });
+  }
+});
+
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
