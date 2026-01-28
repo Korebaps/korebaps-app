@@ -8,21 +8,23 @@ const https = require('https');
 const crypto = require('crypto');
 const path = require('path');
 
-// Debug: Log environment variables (without sensitive data)
-console.log('=== ENVIRONMENT DEBUG ===');
-console.log('DB_HOST:', process.env.DB_HOST ? 'SET' : 'NOT SET');
-console.log('DB_PORT:', process.env.DB_PORT ? 'SET' : 'NOT SET');
-console.log('DB_NAME:', process.env.DB_NAME ? 'SET' : 'NOT SET');
-console.log('DB_USER:', process.env.DB_USER ? 'SET' : 'NOT SET');
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
-console.log('ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET');
-console.log('DB_SSL:', process.env.DB_SSL);
-console.log('PORT:', process.env.PORT);
-console.log('DB_SSL_CA:', process.env.DB_SSL_CA);
-console.log('DB_SSL_REJECT_UNAUTHORIZED:', process.env.DB_SSL_REJECT_UNAUTHORIZED);
-console.log('REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
-console.log('All environment variables:', Object.keys(process.env).filter(key => key.includes('DB') || key.includes('ADMIN') || key.includes('PORT') || key.includes('REACT')));
-console.log('=== END ENVIRONMENT DEBUG ===');
+// Debug: Log environment variables (without sensitive data) - only in development
+if (process.env.NODE_ENV !== 'production') {
+  console.log('=== ENVIRONMENT DEBUG ===');
+  console.log('DB_HOST:', process.env.DB_HOST ? 'SET' : 'NOT SET');
+  console.log('DB_PORT:', process.env.DB_PORT ? 'SET' : 'NOT SET');
+  console.log('DB_NAME:', process.env.DB_NAME ? 'SET' : 'NOT SET');
+  console.log('DB_USER:', process.env.DB_USER ? 'SET' : 'NOT SET');
+  console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
+  console.log('ADMIN_PASSWORD:', process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET');
+  console.log('DB_SSL:', process.env.DB_SSL);
+  console.log('PORT:', process.env.PORT);
+  console.log('DB_SSL_CA:', process.env.DB_SSL_CA);
+  console.log('DB_SSL_REJECT_UNAUTHORIZED:', process.env.DB_SSL_REJECT_UNAUTHORIZED);
+  console.log('REACT_APP_API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+  console.log('All environment variables:', Object.keys(process.env).filter(key => key.includes('DB') || key.includes('ADMIN') || key.includes('PORT') || key.includes('REACT')));
+  console.log('=== END ENVIRONMENT DEBUG ===');
+}
 
 const app = express();
 app.use(cors());
@@ -1654,68 +1656,67 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', port });
 });
 
-// Debug endpoint to check environment variables
-app.get('/debug-env', (req, res) => {
-  res.json({
-    DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
-    DB_PORT: process.env.DB_PORT ? 'SET' : 'NOT SET',
-    DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET',
-    DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
-    DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
-    DB_SSL: process.env.DB_SSL,
-    PORT: process.env.PORT,
-    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET'
+// Debug endpoints (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/debug-env', (req, res) => {
+    res.json({
+      DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
+      DB_PORT: process.env.DB_PORT ? 'SET' : 'NOT SET',
+      DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET',
+      DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
+      DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
+      DB_SSL: process.env.DB_SSL,
+      PORT: process.env.PORT,
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'NOT SET'
+    });
   });
-});
 
-// Debug endpoint to test database connection
-app.get('/debug-db', async (req, res) => {
-  try {
-    console.log('Testing database connection...');
-    console.log('DB_HOST:', process.env.DB_HOST);
-    console.log('DB_PORT:', process.env.DB_PORT);
-    console.log('DB_NAME:', process.env.DB_NAME);
-    console.log('DB_USER:', process.env.DB_USER);
-    console.log('DB_SSL:', process.env.DB_SSL);
-    console.log('DB_SSL_CA:', process.env.DB_SSL_CA);
-    
-    // Test basic connection
-    const connection = await pool.getConnection();
-    console.log('Database connection successful!');
-    
-    // Test a simple query
-    const [rows] = await connection.execute('SELECT 1 as test');
-    connection.release();
-    
-    res.json({
-      status: 'success',
-      message: 'Database connection working',
-      testQuery: rows,
-      sslConfig: {
-        enabled: sslEnabled,
-        caPath: sslCaPath,
-        rejectUnauthorized,
-        caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
-      }
-    });
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    res.json({
-      status: 'error',
-      message: error.message,
-      code: error.code,
-      errno: error.errno,
-      sqlState: error.sqlState,
-      sqlMessage: error.sqlMessage,
-      sslConfig: {
-        enabled: sslEnabled,
-        caPath: sslCaPath,
-        rejectUnauthorized,
-        caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
-      }
-    });
-  }
-});
+  app.get('/debug-db', async (req, res) => {
+    try {
+      console.log('Testing database connection...');
+      console.log('DB_HOST:', process.env.DB_HOST);
+      console.log('DB_PORT:', process.env.DB_PORT);
+      console.log('DB_NAME:', process.env.DB_NAME);
+      console.log('DB_USER:', process.env.DB_USER);
+      console.log('DB_SSL:', process.env.DB_SSL);
+      console.log('DB_SSL_CA:', process.env.DB_SSL_CA);
+      
+      const connection = await pool.getConnection();
+      console.log('Database connection successful!');
+      
+      const [rows] = await connection.execute('SELECT 1 as test');
+      connection.release();
+      
+      res.json({
+        status: 'success',
+        message: 'Database connection working',
+        testQuery: rows,
+        sslConfig: {
+          enabled: sslEnabled,
+          caPath: sslCaPath,
+          rejectUnauthorized,
+          caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
+        }
+      });
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      res.json({
+        status: 'error',
+        message: error.message,
+        code: error.code,
+        errno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+        sslConfig: {
+          enabled: sslEnabled,
+          caPath: sslCaPath,
+          rejectUnauthorized,
+          caFileExists: sslCaPath ? fs.existsSync(sslCaPath) : false
+        }
+      });
+    }
+  });
+}
 
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {

@@ -30,6 +30,7 @@ steps:
       - 'DB_SSL_CA=ca.pem'
       - 'DB_SSL_REJECT_UNAUTHORIZED=true'
       - 'REACT_APP_API_BASE_URL=https://korebaps-app-335189014297.us-east4.run.app'
+      - 'NODE_ENV=production'
 
 images:
   - 'us-east4-docker.pkg.dev/$PROJECT_ID/korebaps-app/korebaps-app'
