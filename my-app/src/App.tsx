@@ -491,13 +491,13 @@ function MainDashboard() {
     value === null || value === undefined || value === '' ? '-' : value;
 
   const carouselImages = [
-    '/carousel-1.jpg',
+    '/carousel-1.JPG',
     '/carousel-2.jpg',
     '/carousel-3.jpg',
     '/carousel-4.jpg',
     '/carousel-5.jpg',
-    '/carousel-6.jpg',
-    '/carousel-7.jpg',
+    '/carousel-6.JPG',
+    '/carousel-7.JPG',
     '/carousel-8.jpg',
   ];
 
@@ -577,7 +577,7 @@ function MainDashboard() {
           )}
         />
 
-        <section className="relative overflow-hidden rounded-2xl border-2 border-[#daaa00] bg-gray-900 shadow-lg">
+        <section className="relative overflow-hidden rounded-2xl border-2 border-[#daaa00] bg-gray-900 shadow-lg mb-6">
           <div className="relative h-64 w-full sm:h-80 md:h-96">
             {carouselImages.map((src, index) => (
               <img
