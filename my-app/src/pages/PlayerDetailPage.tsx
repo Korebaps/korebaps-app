@@ -305,7 +305,7 @@ export default function PlayerDetailPage() {
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <Header
           logoSrc={logo}
-          title="코레밥스 선수 기록 Beta"
+          title="코레밥스 선수 기록"
           subtitle="Korebaps Stats Dashboard"
           stats={[
             { label: '선수명', value: playerName || '-' },
