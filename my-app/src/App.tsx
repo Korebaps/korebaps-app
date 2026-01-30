@@ -130,7 +130,7 @@ function MainDashboard() {
   const [pitchingLoading, setPitchingLoading] = useState(true);
   const [pitchingError, setPitchingError] = useState<string | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [showInactivePlayers, setShowInactivePlayers] = useState(true);
+  const [showInactivePlayers, setShowInactivePlayers] = useState(false);
   const [latestGameDate, setLatestGameDate] = useState<string | null>(null);
 
 
