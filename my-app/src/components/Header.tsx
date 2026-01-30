@@ -24,7 +24,7 @@ export default function Header({ logoSrc, title, subtitle, stats, action }: Head
             <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
           </div>
         </a>
-        {action ? <div className="w-full md:w-auto max-w-full">{action}</div> : null}
+        {action ? <div className="w-full md:w-auto max-w-full overflow-x-auto">{action}</div> : null}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat) => (
