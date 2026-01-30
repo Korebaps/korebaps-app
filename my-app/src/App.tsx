@@ -3,6 +3,7 @@ import { Calculator } from 'lucide-react';
 import { PointTable } from './components/PointTable';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import VisitorTracker from './components/VisitorTracker';
 import logo from './assets/logo.png';
 import API_BASE_URL from './apiBaseUrl';
 
@@ -576,6 +577,8 @@ function MainDashboard() {
             </div>
           )}
         />
+
+        <VisitorTracker className="mb-6" />
 
         <section className="relative overflow-hidden rounded-2xl border-2 border-[#daaa00] bg-gray-900 shadow-lg mb-6">
           <div className="relative h-64 w-full sm:h-80 md:h-96">
