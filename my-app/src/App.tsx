@@ -563,7 +563,7 @@ function MainDashboard() {
                 }}
                 className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                현역 로스터
+                로스터
               </button>
               <button
                 onClick={() => {
