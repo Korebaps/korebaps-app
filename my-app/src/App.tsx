@@ -510,8 +510,8 @@ function MainDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-black">
-      <div className="relative max-w-7xl mx-auto p-6 md:p-10 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      <div className="relative max-w-7xl mx-auto p-4 md:p-8 w-full overflow-x-hidden">
         <Header
           logoSrc={logo}
           title="코레밥스 선수 기록"
@@ -553,7 +553,7 @@ function MainDashboard() {
                 onClick={() => {
                   window.location.href = '/media';
                 }}
-                className="shrink-0 px-4 py-2 rounded-lg border-2 border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black hover:scale-105 hover:shadow-lg hover:shadow-[#daaa00]/20 transition-all duration-200 ease-out font-semibold"
+                className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 영상
               </button>
@@ -561,7 +561,7 @@ function MainDashboard() {
                 onClick={() => {
                   window.location.href = '/roster';
                 }}
-                className="shrink-0 px-4 py-2 rounded-lg border-2 border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black hover:scale-105 hover:shadow-lg hover:shadow-[#daaa00]/20 transition-all duration-200 ease-out font-semibold"
+                className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 로스터
               </button>
@@ -569,7 +569,7 @@ function MainDashboard() {
                 onClick={() => {
                   window.location.href = '/games';
                 }}
-                className="shrink-0 px-4 py-2 rounded-lg border-2 border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black hover:scale-105 hover:shadow-lg hover:shadow-[#daaa00]/20 transition-all duration-200 ease-out font-semibold"
+                className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 경기 기록
               </button>
@@ -623,10 +623,10 @@ function MainDashboard() {
         </section>
 
         <div className="grid grid-cols-1 gap-6">
-          <section className="bg-gradient-to-br from-gray-900 via-blue-900/10 to-gray-800 rounded-2xl shadow-lg p-8 border-2 border-[#daaa00] mb-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-4 border-2 border-[#daaa00]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold text-[#daaa00]" style={{ textShadow: '0 0 10px rgba(218, 170, 0, 0.3)' }}>시즌 선택</h2>
+                <h2 className="text-xl font-bold text-[#daaa00]">시즌 선택</h2>
               </div>
               {/* Season Select Section */}
 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -655,8 +655,8 @@ function MainDashboard() {
   
   <button
     type="button"
-    onClick={handleCurrentSeasonClick}
-    className="w-full rounded-lg border-2 border-[#daaa00] px-3 py-2 text-sm font-semibold text-[#daaa00] transition-all duration-200 ease-out hover:bg-[#daaa00] hover:text-black hover:scale-105 hover:shadow-lg hover:shadow-[#daaa00]/20 sm:w-auto"
+    onClick={handleCurrentSeasonClick} // Updated function
+    className="w-full rounded-lg border-2 border-[#daaa00] px-3 py-2 text-sm font-semibold text-[#daaa00] transition hover:bg-[#daaa00] hover:text-black sm:w-auto"
   >
     현재 시즌 선택
   </button>
@@ -673,10 +673,10 @@ function MainDashboard() {
 </div>
             </div>
           </section>
-          <section className="bg-gradient-to-br from-gray-900 via-blue-900/10 to-gray-800 rounded-2xl shadow-lg p-8 border-2 border-[#daaa00]">
-            <div className="flex items-center gap-3 mb-6">
-              <Calculator className="w-7 h-7 text-[#daaa00]" />
-              <h2 className="text-xl font-bold text-[#daaa00]" style={{ textShadow: '0 0 10px rgba(218, 170, 0, 0.3)' }}>타격 스탯</h2>
+          <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+            <div className="flex items-center gap-2 mb-4">
+              <Calculator className="w-6 h-6 text-[#daaa00]" />
+              <h2 className="text-xl font-bold text-[#daaa00]">타격 스탯</h2>
             </div>
             {battingLoading ? (
               <div className="text-center text-gray-400">Loading...</div>

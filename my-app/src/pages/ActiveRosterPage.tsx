@@ -54,8 +54,8 @@ export default function ActiveRosterPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-black">
-      <div className="max-w-7xl mx-auto p-6 md:p-10 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         <Header
           logoSrc={logo}
           title="코레밥스 현역 로스터"
@@ -70,17 +70,17 @@ export default function ActiveRosterPage() {
               onClick={() => {
                 window.location.href = '/';
               }}
-              className="px-6 py-3 rounded-lg border-2 border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black hover:scale-105 hover:shadow-lg hover:shadow-[#daaa00]/20 transition-all duration-200 ease-out font-semibold"
+              className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
             >
               메인으로
             </button>
           )}
         />
 
-        <section className="bg-gradient-to-br from-gray-900 via-blue-900/10 to-gray-800 rounded-2xl shadow-lg p-8 border-2 border-[#daaa00] mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Users className="w-7 h-7 text-[#daaa00]" />
-            <h2 className="text-2xl font-bold text-[#daaa00]" style={{ textShadow: '0 0 10px rgba(218, 170, 0, 0.3)' }}>Active Roster</h2>
+        <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-6 h-6 text-[#daaa00]" />
+            <h2 className="text-xl font-bold text-[#daaa00]">Active Roster</h2>
           </div>
 
           {loading ? (
@@ -90,7 +90,7 @@ export default function ActiveRosterPage() {
           ) : players.length === 0 ? (
             <div className="text-center text-gray-400">등록된 현역 선수가 없습니다.</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {players.map((player) => (
                 <button
                   key={player.id}
@@ -102,7 +102,7 @@ export default function ActiveRosterPage() {
                     });
                     window.location.href = `/player?${params.toString()}`;
                   }}
-                  className="relative w-full text-left rounded-xl border-2 border-gray-700 bg-gray-800/80 p-5 pt-8 text-white shadow-lg transition-all duration-200 hover:border-[#daaa00] hover:-translate-y-1 hover:shadow-[#daaa00]/30 active:scale-95"
+                  className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-[#daaa00]"
                 >
                   <span className="absolute left-3 top-3 text-base font-bold text-[#daaa00]">#{player.jerseyNumber}</span>
                   <div className="flex items-center justify-between">
@@ -117,17 +117,17 @@ export default function ActiveRosterPage() {
           )}
         </section>
 
-        <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl shadow-lg p-8 border-2 border-gray-700 mt-8">
+        <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-gray-700 mt-6">
           <details>
             <summary className="cursor-pointer select-none">
-              <div className="flex items-center gap-3">
-                <Users className="w-7 h-7 text-gray-300" />
-                <h2 className="text-2xl font-bold text-gray-200" style={{ textShadow: '0 0 8px rgba(255, 255, 255, 0.1)' }}>Inactive Roster</h2>
-                <span className="ml-auto text-sm text-gray-400">(click to expand)</span>
+              <div className="flex items-center gap-2">
+                <Users className="w-6 h-6 text-gray-300" />
+                <h2 className="text-xl font-bold text-gray-200">Inactive Roster</h2>
+                <span className="ml-auto text-xs text-gray-400">(click to expand)</span>
               </div>
             </summary>
 
-            <div className="mt-6">
+            <div className="mt-4">
               {loading ? (
                 <div className="text-center text-gray-400">Loading...</div>
               ) : error ? (
@@ -135,7 +135,7 @@ export default function ActiveRosterPage() {
               ) : inactivePlayers.length === 0 ? (
                 <div className="text-center text-gray-400">등록된 비현역 선수가 없습니다.</div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {inactivePlayers.map((player) => (
                     <button
                       key={player.id}
@@ -147,7 +147,7 @@ export default function ActiveRosterPage() {
                         });
                         window.location.href = `/player?${params.toString()}`;
                       }}
-                      className="relative w-full text-left rounded-xl border-2 border-gray-700 bg-gray-800/80 p-5 pt-8 text-white shadow-lg transition-all duration-200 hover:border-gray-300 hover:-translate-y-1 hover:shadow-gray-300/30 active:scale-95"
+                      className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-gray-300"
                     >
                       <span className="absolute left-3 top-3 text-base font-bold text-gray-300">#{player.jerseyNumber}</span>
                       <div className="flex items-center justify-between">
