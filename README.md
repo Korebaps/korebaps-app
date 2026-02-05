@@ -135,7 +135,7 @@ korebaps-app/
 **Made By:**
 - Junsu Yoon(17) - PM, Frontend
 - Taerim Kim (66) - Backend, DB  
-- Junhyung Park - UX, UI
+
 
 ## 라이선스
 
