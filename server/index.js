@@ -1227,15 +1227,16 @@ app.get('/api/games', async (req, res) => {
     const [rows] = await pool.execute(
       `
         select
-          min(g.game_id) as game_id,
+          g.game_id,
           g.game_date,
           g.opponent,
           g.is_friendly,
           g.score,
-          g.opp_score
+          g.opp_score,
+          (select count(*) from batting_stats bs where bs.game_id = g.game_id) as batting_count,
+          (select count(*) from pitching_stats ps where ps.game_id = g.game_id) as pitching_count
         from games g
         ${conditions.length ? `where ${conditions.join(' and ')}` : ''}
-        group by g.game_date, g.opponent, g.is_friendly, g.score, g.opp_score
         order by g.game_date desc
       `,
       params,
@@ -1507,8 +1508,17 @@ app.delete('/api/games/:gameId', requireAdmin, async (req, res) => {
       return;
     }
 
-    await pool.execute('delete from games where game_id = ?', [gameId]);
-    res.json({ ok: true });
+    const [battingDel] = await pool.execute('DELETE FROM batting_stats WHERE game_id = ?', [gameId]);
+    const [pitchingDel] = await pool.execute('DELETE FROM pitching_stats WHERE game_id = ?', [gameId]);
+    await pool.execute('DELETE FROM games WHERE game_id = ?', [gameId]);
+
+    res.json({
+      ok: true,
+      deleted: {
+        battingStats: battingDel.affectedRows,
+        pitchingStats: pitchingDel.affectedRows,
+      },
+    });
   } catch (error) {
     console.error('Failed to delete game', error);
     res.status(500).json({ error: 'Failed to delete game' });

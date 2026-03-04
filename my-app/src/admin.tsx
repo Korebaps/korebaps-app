@@ -28,6 +28,8 @@ type GameRecord = {
   is_friendly: number;
   score: number | null;
   opp_score: number | null;
+  batting_count?: number;
+  pitching_count?: number;
 };
 
 type ActivePlayerOption = {
@@ -1259,35 +1261,84 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
-              <h2 className="text-xl font-bold text-[#daaa00] mb-4">경기 목록</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-[#daaa00]">경기 목록</h2>
+                {games.length > 0 && (
+                  <span className="text-xs text-gray-400">{games.length}경기</span>
+                )}
+              </div>
               {gamesLoading ? (
                 <p className="text-gray-400 text-center py-8">Loading...</p>
               ) : games.length === 0 ? (
                 <p className="text-gray-400 text-center py-8">
-                  {!selectedSeasonId
-                    ? '아직 등록된 경기가 없습니다.'
-                    : '아직 등록된 경기가 없습니다.'}
+                  {selectedSeasonId
+                    ? '이 시즌에 등록된 경기가 없습니다.'
+                    : '시즌을 선택하거나 경기를 추가하세요.'}
                 </p>
               ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {games.map((g) => (
-                    <div
-                      key={g.game_id}
-                      className="border-2 border-gray-700 rounded-lg p-4 bg-gray-800"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-white font-bold">{g.game_date} vs {g.opponent}</div>
-                          <div className="text-xs text-gray-400">
-                            {g.is_friendly ? 'Friendly' : 'Official'}
-                            {g.score !== null && g.opp_score !== null ? ` | Score ${g.score}-${g.opp_score}` : ''}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                  {games.map((g) => {
+                    const hasStats = (g.batting_count ?? 0) > 0 || (g.pitching_count ?? 0) > 0;
+                    const dateStr = g.game_date?.includes('T')
+                      ? g.game_date.split('T')[0]
+                      : g.game_date;
+                    const isWin = g.score !== null && g.opp_score !== null && g.score > g.opp_score;
+                    const isLoss = g.score !== null && g.opp_score !== null && g.score < g.opp_score;
+                    const isDraw = g.score !== null && g.opp_score !== null && g.score === g.opp_score;
+
+                    return (
+                      <div
+                        key={g.game_id}
+                        className={`rounded-xl p-4 transition border-2 ${
+                          hasStats
+                            ? 'bg-gray-800/80 border-green-800/60'
+                            : 'bg-gray-800/50 border-gray-700/50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white font-bold text-base truncate">
+                                vs {g.opponent}
+                              </span>
+                              {g.is_friendly ? (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-300 font-medium shrink-0">
+                                  친선
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className="text-sm text-gray-400 mb-2">{dateStr}</div>
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {g.score !== null && g.opp_score !== null ? (
+                                <span className={`text-sm font-bold px-2 py-0.5 rounded ${
+                                  isWin ? 'bg-green-900/50 text-green-300' :
+                                  isLoss ? 'bg-red-900/50 text-red-300' :
+                                  isDraw ? 'bg-gray-700/50 text-gray-300' : ''
+                                }`}>
+                                  {isWin ? 'W' : isLoss ? 'L' : 'D'} {g.score}-{g.opp_score}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-500">점수 미입력</span>
+                              )}
+                              {hasStats ? (
+                                <span className="text-xs text-green-400 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                                  타격 {g.batting_count ?? 0} · 투구 {g.pitching_count ?? 0}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block" />
+                                  기록 없음
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs text-gray-400">ID: {g.game_id}</div>
                           <button
                             onClick={async () => {
-                              if (window.confirm(`Delete game: ${g.game_date} vs ${g.opponent}?`)) {
+                              const statsWarning = hasStats
+                                ? `\n\n⚠️ 이 경기에는 타격 ${g.batting_count}건, 투구 ${g.pitching_count}건의 기록이 있습니다. 모두 삭제됩니다.`
+                                : '';
+                              if (window.confirm(`${dateStr} vs ${g.opponent} 경기를 삭제하시겠습니까?${statsWarning}`)) {
                                 try {
                                   const response = await authFetch(`${API_BASE_URL}/api/games/${g.game_id}`, {
                                     method: 'DELETE',
@@ -1304,18 +1355,19 @@ export default function AdminDashboard() {
                                   }
                                 } catch (err) {
                                   console.error('Failed to delete game:', err);
-                                  alert('Failed to delete game');
+                                  alert('경기 삭제에 실패했습니다.');
                                 }
                               }
                             }}
-                            className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition"
+                            className="shrink-0 p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-900/30 transition"
+                            title="경기 삭제"
                           >
-                            삭제
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
