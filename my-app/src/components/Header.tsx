@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import VisitorBanner from './VisitorBanner';
 
 type StatItem = {
   label: string;
@@ -34,6 +35,7 @@ export default function Header({ logoSrc, title, subtitle, stats, action }: Head
           </div>
         ))}
       </div>
+      <VisitorBanner />
     </div>
   );
 }

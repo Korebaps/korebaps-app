@@ -522,7 +522,6 @@ function MainDashboard() {
               value: latestGameDate ? new Date(latestGameDate).toLocaleDateString('ko-KR') : '-',
             },
             { label: '등록 선수', value: `${battingRecords.length}명` },
-            { label: '투구 기록', value: `${pitchingRecords.length}명` },
           ]}
           action={(
             <div className="flex items-center gap-2 max-w-full overflow-x-auto whitespace-nowrap">
