@@ -614,7 +614,6 @@ app.delete('/api/pitching-stats', requireAdmin, async (req, res) => {
 });
 
 app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
-  const conn = await pool.getConnection();
   try {
     const gameId = Number(req.body?.gameId);
     const battingStats = req.body?.battingStats ?? [];
@@ -622,38 +621,34 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
 
     if (!gameId) {
       res.status(400).json({ error: 'Missing gameId' });
-      conn.release();
       return;
     }
 
-    const [gameRows] = await conn.execute('SELECT game_id FROM games WHERE game_id = ?', [gameId]);
+    const [gameRows] = await pool.execute('SELECT game_id FROM games WHERE game_id = ?', [gameId]);
     if (gameRows.length === 0) {
       res.status(404).json({ error: 'Game not found' });
-      conn.release();
       return;
     }
 
     const allPlayerIds = [
-      ...battingStats.map((s) => s.playerId),
-      ...pitchingStats.map((s) => s.playerId),
+      ...battingStats.map((s) => Number(s.playerId)),
+      ...pitchingStats.map((s) => Number(s.playerId)),
     ].filter(Boolean);
 
     if (allPlayerIds.length > 0) {
-      const placeholders = allPlayerIds.map(() => '?').join(',');
-      const [activePlayers] = await conn.execute(
+      const uniqueIds = [...new Set(allPlayerIds)];
+      const placeholders = uniqueIds.map(() => '?').join(',');
+      const [activeRows] = await pool.query(
         `SELECT player_id FROM players WHERE player_id IN (${placeholders}) AND is_active = 1`,
-        allPlayerIds,
+        uniqueIds,
       );
-      const activeIds = new Set(activePlayers.map((p) => p.player_id));
-      const invalid = allPlayerIds.filter((id) => !activeIds.has(id));
+      const activeIds = new Set(activeRows.map((p) => p.player_id));
+      const invalid = uniqueIds.filter((id) => !activeIds.has(id));
       if (invalid.length > 0) {
-        res.status(400).json({ error: `Players not active: ${[...new Set(invalid)].join(', ')}` });
-        conn.release();
+        res.status(400).json({ error: `Players not active: ${invalid.join(', ')}` });
         return;
       }
     }
-
-    await conn.beginTransaction();
 
     let battingCount = 0;
     for (const stat of battingStats) {
@@ -679,7 +674,7 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
 
       const battingPoints = calculateBattingPoints(payload);
 
-      const [updateResult] = await conn.execute(
+      const [updateResult] = await pool.execute(
         `UPDATE batting_stats SET
           plate_appearances = ?, singles = ?, doubles = ?, triples = ?,
           home_runs = ?, runs_scored = ?, rbi = ?, walks = ?,
@@ -696,7 +691,7 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
       );
 
       if (updateResult.affectedRows === 0) {
-        await conn.execute(
+        await pool.execute(
           `INSERT INTO batting_stats (
             game_id, player_id, plate_appearances, singles, doubles, triples,
             home_runs, runs_scored, rbi, walks, strikeouts, hit_by_pitch,
@@ -734,7 +729,7 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
         isMVP: stat.isMVP ? 1 : 0,
       };
 
-      const [updateResult] = await conn.execute(
+      const [updateResult] = await pool.execute(
         `UPDATE pitching_stats SET
           outs_recorded = ?, pitches_thrown = ?, hits_allowed = ?,
           runs_allowed = ?, earned_runs = ?, strikeouts = ?,
@@ -751,7 +746,7 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
       );
 
       if (updateResult.affectedRows === 0) {
-        await conn.execute(
+        await pool.execute(
           `INSERT INTO pitching_stats (
             game_id, player_id, outs_recorded, pitches_thrown, hits_allowed,
             runs_allowed, earned_runs, strikeouts, walks_allowed, hit_batters,
@@ -769,15 +764,10 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
       pitchingCount++;
     }
 
-    await conn.commit();
-    conn.release();
-
     res.json({ ok: true, inserted: { batting: battingCount, pitching: pitchingCount } });
   } catch (error) {
-    await conn.rollback().catch(() => {});
-    conn.release();
     console.error('Failed to upload game stats', error);
-    res.status(500).json({ error: 'Failed to upload game stats' });
+    res.status(500).json({ error: 'Failed to upload game stats: ' + (error.message || 'Unknown error') });
   }
 });
 
