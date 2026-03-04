@@ -44,81 +44,79 @@
     <script>
       (function() {
         'use strict';
-        
-        function getVisitorCount() {
-          try {
-            var storageKey = 'korebaps_visitor_stats';
-            var data = localStorage.getItem(storageKey);
-            if (!data) {
-              data = JSON.stringify({
-                total: 0,
-                daily: {},
-                monthly: {},
-                lastVisit: 0
-              });
-            }
-            return JSON.parse(data);
-          } catch (e) {
-            return { total: 0, daily: {}, monthly: {}, lastVisit: 0 };
+
+        var THROTTLE_KEY = 'korebaps_visitor_last_record';
+        var SESSION_MS = 30 * 60 * 1000;
+
+        function getFingerprint() {
+          var raw = [
+            navigator.userAgent,
+            screen.width + 'x' + screen.height,
+            screen.colorDepth,
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+          ].join('|');
+          var hash = 0;
+          for (var i = 0; i < raw.length; i++) {
+            hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+            hash |= 0;
           }
+          return 'fp_' + Math.abs(hash).toString(36);
         }
-        
-        function saveVisitorCount(data) {
-          try {
-            var storageKey = 'korebaps_visitor_stats';
-            localStorage.setItem(storageKey, JSON.stringify(data));
-          } catch (e) {
-            console.log('Could not save visitor data:', e);
-          }
-        }
-        
-        function updateCounter() {
-          var data = getVisitorCount();
-          var now = Date.now();
-          var today = new Date().toDateString();
-          var thisMonth = new Date().toISOString().slice(0, 7);
-          
-          // Check if this is a new visit (30 minute session timeout)
-          var isNewVisit = !data.lastVisit || (now - data.lastVisit) > 30 * 60 * 1000;
-          
-          if (isNewVisit) {
-            // Update total
-            data.total = (data.total || 0) + 1;
-            
-            // Update daily
-            if (!data.daily) data.daily = {};
-            data.daily[today] = (data.daily[today] || 0) + 1;
-            
-            // Update monthly
-            if (!data.monthly) data.monthly = {};
-            data.monthly[thisMonth] = (data.monthly[thisMonth] || 0) + 1;
-            
-            // Update last visit
-            data.lastVisit = now;
-            
-            saveVisitorCount(data);
-          }
-          
-          // Display the counter
+
+        function showStats(stats) {
           var counter = document.getElementById('visitor-counter');
           if (counter) {
-            var todayCount = data.daily[today] || 0;
-            var monthCount = data.monthly[thisMonth] || 0;
-            counter.innerHTML = 'Today: ' + todayCount + ' | Month: ' + monthCount + ' | Total: ' + data.total;
+            counter.innerHTML = 'Today: ' + stats.today + ' | Month: ' + stats.month + ' | Total: ' + stats.total;
           }
         }
-        
-        // Update immediately and then every 30 seconds
-        updateCounter();
-        setInterval(updateCounter, 30000);
-        
-        // Also update when page becomes visible again
-        document.addEventListener('visibilitychange', function() {
-          if (!document.hidden) {
-            updateCounter();
+
+        function showError() {
+          var counter = document.getElementById('visitor-counter');
+          if (counter) {
+            counter.innerHTML = 'Visitor stats unavailable';
           }
-        });
-        
+        }
+
+        function shouldRecord() {
+          try {
+            var last = parseInt(localStorage.getItem(THROTTLE_KEY), 10);
+            return !last || (Date.now() - last) > SESSION_MS;
+          } catch (e) {
+            return true;
+          }
+        }
+
+        function markRecorded() {
+          try { localStorage.setItem(THROTTLE_KEY, String(Date.now())); } catch (e) {}
+        }
+
+        function recordVisit() {
+          var fingerprint = getFingerprint();
+          fetch('/api/visitor/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fingerprint: fingerprint })
+          })
+          .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+          .then(function(stats) {
+            markRecorded();
+            showStats(stats);
+          })
+          .catch(function() { fetchStats(); });
+        }
+
+        function fetchStats() {
+          fetch('/api/visitor/stats')
+            .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(showStats)
+            .catch(showError);
+        }
+
+        if (shouldRecord()) {
+          recordVisit();
+        } else {
+          fetchStats();
+        }
       })();
     </script>
     <!--

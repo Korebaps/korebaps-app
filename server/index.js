@@ -217,15 +217,81 @@ const pool = mysql.createPool({
     : undefined,
 });
 
-// Test database connection on startup
+// Test database connection on startup and ensure visitor_hits table exists
 pool.getConnection()
-  .then(conn => {
+  .then(async (conn) => {
     console.log('Database connected successfully');
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS visitor_hits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        visitor_hash VARCHAR(64) NOT NULL,
+        visited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_visited_at (visited_at),
+        INDEX idx_visitor_hash (visitor_hash)
+      )
+    `);
+    console.log('visitor_hits table ready');
     conn.release();
   })
   .catch(err => {
     console.error('Database connection failed:', err);
   });
+
+// --- Visitor tracking endpoints ---
+
+async function getVisitorStats() {
+  const [[{ today }]] = await pool.execute(
+    `SELECT COUNT(*) AS today FROM visitor_hits WHERE DATE(visited_at) = CURDATE()`
+  );
+  const [[{ month }]] = await pool.execute(
+    `SELECT COUNT(*) AS month FROM visitor_hits WHERE YEAR(visited_at) = YEAR(CURDATE()) AND MONTH(visited_at) = MONTH(CURDATE())`
+  );
+  const [[{ total }]] = await pool.execute(
+    `SELECT COUNT(*) AS total FROM visitor_hits`
+  );
+  return { today, month, total };
+}
+
+app.post('/api/visitor/record', async (req, res) => {
+  try {
+    const { fingerprint } = req.body || {};
+    if (!fingerprint || typeof fingerprint !== 'string') {
+      return res.status(400).json({ error: 'Missing fingerprint' });
+    }
+
+    const visitorHash = crypto.createHash('sha256').update(fingerprint).digest('hex');
+
+    const [existing] = await pool.execute(
+      `SELECT id FROM visitor_hits WHERE visitor_hash = ? AND visited_at > DATE_SUB(NOW(), INTERVAL 30 MINUTE) LIMIT 1`,
+      [visitorHash]
+    );
+
+    if (existing.length === 0) {
+      await pool.execute(
+        `INSERT INTO visitor_hits (visitor_hash, visited_at) VALUES (?, NOW())`,
+        [visitorHash]
+      );
+    }
+
+    const stats = await getVisitorStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('Visitor record error:', err);
+    res.status(500).json({ error: 'Failed to record visit' });
+  }
+});
+
+app.get('/api/visitor/stats', async (req, res) => {
+  try {
+    const stats = await getVisitorStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('Visitor stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch visitor stats' });
+  }
+});
+
+// --- End visitor tracking ---
 
 app.get('/api/seasonal-batting-stats', async (req, res) => {
   try {
