@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import App from './App.tsx';
 import PlayerDetailPage from './pages/PlayerDetailPage.tsx';
 import AdminDashboard from './admin.tsx';
 import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
