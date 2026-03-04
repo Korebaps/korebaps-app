@@ -67,6 +67,8 @@ export default function AdminDashboard() {
   const [adminPassword, setAdminPassword] = useState('');
 
   const [activeTab, setActiveTab] = useState('seasons');
+  const [showManualTabs, setShowManualTabs] = useState(false);
+  const [playerSearch, setPlayerSearch] = useState('');
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0]);
   const [opponent, setOpponent] = useState('');
 
@@ -960,6 +962,140 @@ export default function AdminDashboard() {
     );
   }
 
+  const renderPlayerCard = (p: Player) => {
+    const isEditing = editingJerseyPlayerId === p.id || editingNamePlayerId === p.id;
+    const isSelected = selectedPlayerId === p.id;
+    const hasWalkup = isSelected && walkupSong?.song_title;
+
+    return (
+      <div
+        key={p.id}
+        className={`rounded-xl p-4 transition border ${
+          isSelected
+            ? 'border-[#daaa00]/60 bg-gray-800'
+            : p.isActive
+              ? 'border-gray-700/50 bg-gray-800/60 hover:border-gray-600'
+              : 'border-gray-700/30 bg-gray-800/30 opacity-70 hover:opacity-100'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-lg font-bold text-[#daaa00] w-8 text-center shrink-0">
+              {p.jerseyNumber}
+            </span>
+            <div className="min-w-0">
+              {editingNamePlayerId === p.id ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={editingFirstName}
+                    onChange={(e) => setEditingFirstName(e.target.value)}
+                    placeholder="First"
+                    className="w-24 px-2 py-1 bg-gray-900 border border-gray-600 text-white rounded text-sm focus:border-[#daaa00] focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={editingLastName}
+                    onChange={(e) => setEditingLastName(e.target.value)}
+                    placeholder="Last"
+                    className="w-24 px-2 py-1 bg-gray-900 border border-gray-600 text-white rounded text-sm focus:border-[#daaa00] focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      updatePlayer(p.id, { firstName: editingFirstName, lastName: editingLastName });
+                      setEditingNamePlayerId(null);
+                    }}
+                    className="text-[#daaa00] hover:text-yellow-300 text-xs font-bold"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => { setEditingNamePlayerId(null); setEditingFirstName(''); setEditingLastName(''); }}
+                    className="text-gray-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingNamePlayerId(p.id);
+                    setEditingFirstName(p.firstName);
+                    setEditingLastName(p.lastName);
+                  }}
+                  className="text-white font-semibold text-sm hover:text-[#daaa00] transition text-left truncate"
+                  title="클릭하여 이름 수정"
+                >
+                  {p.firstName} {p.lastName}
+                </button>
+              )}
+              {editingJerseyPlayerId === p.id ? (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs text-gray-400">#</span>
+                  <input
+                    type="text"
+                    value={editingJerseyValue}
+                    onChange={(e) => setEditingJerseyValue(e.target.value)}
+                    className="w-14 px-2 py-0.5 bg-gray-900 border border-gray-600 text-white rounded text-xs focus:border-[#daaa00] focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const v = Number(editingJerseyValue);
+                      if (Number.isFinite(v)) updatePlayer(p.id, { jerseyNumber: v });
+                      setEditingJerseyPlayerId(null);
+                      setEditingJerseyValue('');
+                    }}
+                    className="text-[#daaa00] hover:text-yellow-300 text-xs font-bold"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => { setEditingJerseyPlayerId(null); setEditingJerseyValue(''); }}
+                    className="text-gray-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingJerseyPlayerId(p.id);
+                    setEditingJerseyValue(String(p.jerseyNumber));
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition"
+                  title="클릭하여 번호 수정"
+                >
+                  #{p.jerseyNumber} 수정
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setSelectedPlayerId(isSelected ? null : p.id)}
+              className="text-gray-400 hover:text-[#daaa00] transition"
+              title="Walkup Song"
+            >
+              {walkupSong?.song_title && isSelected ? '♫' : '♪'}
+            </button>
+            <button
+              type="button"
+              onClick={() => updatePlayer(p.id, { isActive: p.isActive ? 0 : 1 })}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
+                p.isActive
+                  ? 'bg-green-900/50 text-green-300 hover:bg-green-900/80'
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
+              }`}
+            >
+              {p.isActive ? 'Active' : 'Inactive'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -1000,67 +1136,57 @@ export default function AdminDashboard() {
           )}
         />
 
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('players')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'players'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            선수 관리
-          </button>
-          <button
-            onClick={() => setActiveTab('seasons')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'seasons'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            시즌 관리
-          </button>
-          <button
-            onClick={() => setActiveTab('games')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'games'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            경기 관리
-          </button>
-          <button
-            onClick={() => setActiveTab('batting')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'batting'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            타격 기록
-          </button>
-          <button
-            onClick={() => setActiveTab('pitching')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'pitching'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            투구 기록
-          </button>
-          <button
-            onClick={() => setActiveTab('csvUpload')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
-              activeTab === 'csvUpload'
-                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
-                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
-            }`}
-          >
-            CSV 업로드
-          </button>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[
+            { id: 'players', label: '선수 관리' },
+            { id: 'seasons', label: '시즌 관리' },
+            { id: 'games', label: '경기 관리' },
+            { id: 'csvUpload', label: 'CSV 업로드' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
+                activeTab === tab.id
+                  ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
+                  : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <div className="relative">
+            <button
+              onClick={() => setShowManualTabs(!showManualTabs)}
+              className={`py-3 px-4 rounded-lg font-medium transition-all border-2 text-sm ${
+                activeTab === 'batting' || activeTab === 'pitching'
+                  ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
+                  : 'bg-gray-900 text-gray-400 border-gray-600 hover:border-gray-500 hover:text-gray-300'
+              }`}
+            >
+              수동 입력 ▾
+            </button>
+            {showManualTabs && (
+              <div className="absolute top-full mt-1 right-0 z-10 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden min-w-[140px]">
+                <button
+                  onClick={() => { setActiveTab('batting'); setShowManualTabs(false); }}
+                  className={`block w-full text-left px-4 py-2.5 text-sm transition ${
+                    activeTab === 'batting' ? 'bg-[#daaa00] text-black font-bold' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  타격 기록
+                </button>
+                <button
+                  onClick={() => { setActiveTab('pitching'); setShowManualTabs(false); }}
+                  className={`block w-full text-left px-4 py-2.5 text-sm transition ${
+                    activeTab === 'pitching' ? 'bg-[#daaa00] text-black font-bold' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  투구 기록
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {activeTab === 'seasons' ? (
@@ -1374,300 +1500,211 @@ export default function AdminDashboard() {
           </div>
         ) : null}
 
-        {activeTab === 'players' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
-              <div className="flex items-center gap-2 mb-4">
-                <PlusCircle className="w-6 h-6 text-[#daaa00]" />
-                <h2 className="text-xl font-bold text-[#daaa00]">선수 추가</h2>
-              </div>
+        {activeTab === 'players' ? (() => {
+          const searchLower = playerSearch.toLowerCase();
+          const filtered = players.filter((p) =>
+            !searchLower ||
+            p.firstName.toLowerCase().includes(searchLower) ||
+            p.lastName.toLowerCase().includes(searchLower) ||
+            String(p.jerseyNumber).includes(searchLower)
+          );
+          const activePl = filtered.filter((p) => p.isActive);
+          const inactivePl = filtered.filter((p) => !p.isActive);
 
-              {playersError ? (
-                <div className="mb-4 text-sm text-red-400">{playersError}</div>
-              ) : null}
+          return (
+            <div className="space-y-6">
+              {/* Add Player Form */}
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+                <div className="flex items-center gap-2 mb-4">
+                  <PlusCircle className="w-6 h-6 text-[#daaa00]" />
+                  <h2 className="text-xl font-bold text-[#daaa00]">선수 추가</h2>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-[#daaa00] mb-2">First Name</label>
-                  <input
-                    type="text"
-                    value={newPlayerFirstName}
-                    onChange={(event) => setNewPlayerFirstName(event.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800 border-2 border-[#daaa00] text-white rounded-lg focus:ring-2 focus:ring-[#daaa00] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#daaa00] mb-2">Last Name</label>
-                  <input
-                    type="text"
-                    value={newPlayerLastName}
-                    onChange={(event) => setNewPlayerLastName(event.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800 border-2 border-[#daaa00] text-white rounded-lg focus:ring-2 focus:ring-[#daaa00] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#daaa00] mb-2">Jersey #</label>
-                  <input
-                    type="text"
-                    value={newPlayerJerseyNumber}
-                    onChange={(event) => setNewPlayerJerseyNumber(event.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800 border-2 border-[#daaa00] text-white rounded-lg focus:ring-2 focus:ring-[#daaa00] focus:border-transparent"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-sm text-gray-200">
+                {playersError && <div className="mb-4 text-sm text-red-400">{playersError}</div>}
+
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">First Name</label>
                     <input
-                      type="checkbox"
-                      checked={newPlayerIsActive}
-                      onChange={(event) => setNewPlayerIsActive(event.target.checked)}
+                      type="text"
+                      value={newPlayerFirstName}
+                      onChange={(e) => setNewPlayerFirstName(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
                     />
-                    Active
-                  </label>
+                  </div>
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      value={newPlayerLastName}
+                      onChange={(e) => setNewPlayerLastName(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
+                    />
+                  </div>
+                  <div className="w-20">
+                    <label className="block text-xs font-medium text-gray-400 mb-1">#</label>
+                    <input
+                      type="text"
+                      value={newPlayerJerseyNumber}
+                      onChange={(e) => setNewPlayerJerseyNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none text-center"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={createPlayer}
+                    disabled={playerSaving || !newPlayerFirstName.trim() || !newPlayerLastName.trim() || !newPlayerJerseyNumber.trim()}
+                    className="px-5 py-2 rounded-lg bg-[#daaa00] text-black font-bold hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
+                  >
+                    추가
+                  </button>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={createPlayer}
-                  disabled={
-                    playerSaving ||
-                    !newPlayerFirstName.trim() ||
-                    !newPlayerLastName.trim() ||
-                    !newPlayerJerseyNumber.trim()
-                  }
-                  className="px-4 py-2 rounded-lg bg-[#daaa00] text-black font-bold hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
-                >
-                  선수 생성
-                </button>
-              </div>
-            </div>
+              {/* Player List */}
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-[#daaa00]">선수 목록</h2>
+                  <span className="text-xs text-gray-400">
+                    활성 {players.filter((p) => p.isActive).length} / 전체 {players.length}
+                  </span>
+                </div>
 
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
-              <h2 className="text-xl font-bold text-[#daaa00] mb-4">선수 목록</h2>
+                <input
+                  type="text"
+                  placeholder="이름 또는 번호로 검색..."
+                  value={playerSearch}
+                  onChange={(e) => setPlayerSearch(e.target.value)}
+                  className="w-full px-4 py-2 mb-4 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none placeholder-gray-500"
+                />
 
-              {playersLoading ? (
-                <p className="text-gray-400 text-center py-8">Loading...</p>
-              ) : players.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">아직 등록된 선수가 없습니다.</p>
-              ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {players.map((p) => (
-                    <div key={p.id} className="border-2 border-gray-700 rounded-lg p-4 bg-gray-800">
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPlayerId(p.id)}
-                          className="text-left"
-                        >
-                          <div className="text-white font-bold">#{p.jerseyNumber} {p.firstName} {p.lastName}</div>
-                          <div className="text-xs text-gray-400">ID: {p.id}</div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => updatePlayer(p.id, { isActive: p.isActive ? 0 : 1 })}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                            p.isActive ? 'bg-[#daaa00] text-black' : 'bg-gray-700 text-gray-200'
-                          }`}
-                        >
-                          {p.isActive ? 'Active' : 'Inactive'}
-                        </button>
-                      </div>
-
-                      <div className="mt-3 flex items-center gap-2">
-                        {editingJerseyPlayerId === p.id ? (
-                          <>
-                            <input
-                              type="text"
-                              value={editingJerseyValue}
-                              onChange={(e) => setEditingJerseyValue(e.target.value)}
-                              className="w-24 px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const value = Number(editingJerseyValue);
-                                if (!Number.isFinite(value)) return;
-                                updatePlayer(p.id, { jerseyNumber: value });
-                                setEditingJerseyPlayerId(null);
-                                setEditingJerseyValue('');
-                              }}
-                              className="px-3 py-2 rounded-lg bg-[#daaa00] text-black text-xs font-bold hover:bg-yellow-500 transition"
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingJerseyPlayerId(null);
-                                setEditingJerseyValue('');
-                              }}
-                              className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold hover:bg-gray-600 transition"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm text-gray-200">Jersey #: <span className="font-bold">{p.jerseyNumber}</span></div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingJerseyPlayerId(p.id);
-                                setEditingJerseyValue(String(p.jerseyNumber));
-                              }}
-                              className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold hover:bg-gray-600 transition"
-                            >
-                              Edit
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      <div className="mt-2 flex items-center gap-2">
-                        {editingNamePlayerId === p.id ? (
-                          <>
-                            <input
-                              type="text"
-                              value={editingFirstName}
-                              onChange={(e) => setEditingFirstName(e.target.value)}
-                              className="w-32 px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                            />
-                            <input
-                              type="text"
-                              value={editingLastName}
-                              onChange={(e) => setEditingLastName(e.target.value)}
-                              className="w-32 px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                updatePlayer(p.id, {
-                                  firstName: editingFirstName,
-                                  lastName: editingLastName,
-                                });
-                                setEditingNamePlayerId(null);
-                                setEditingFirstName('');
-                                setEditingLastName('');
-                              }}
-                              className="px-3 py-2 rounded-lg bg-[#daaa00] text-black text-xs font-bold hover:bg-yellow-500 transition"
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingNamePlayerId(null);
-                                setEditingFirstName('');
-                                setEditingLastName('');
-                              }}
-                              className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold hover:bg-gray-600 transition"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm text-gray-200">Name: <span className="font-bold">{p.firstName} {p.lastName}</span></div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingNamePlayerId(p.id);
-                                setEditingFirstName(p.firstName);
-                                setEditingLastName(p.lastName);
-                              }}
-                              className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold hover:bg-gray-600 transition"
-                            >
-                              Edit
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {selectedPlayerId === p.id ? (
-                        <div className="mt-4 border-t border-gray-700 pt-4">
-                          <h3 className="text-sm font-bold text-[#daaa00] mb-2">Walkup Song</h3>
-
-                          {walkupError ? (
-                            <div className="mb-2 text-sm text-red-400">{walkupError}</div>
-                          ) : null}
-
-                          {walkupLoading ? (
-                            <div className="text-sm text-gray-400">Loading...</div>
-                          ) : (
-                            <>
-                              {walkupSong?.spotify_track_url ? (
-                                <a
-                                  href={walkupSong.spotify_track_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-xs text-[#daaa00] underline"
-                                >
-                                  Open in Spotify
-                                </a>
-                              ) : null}
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                                <div>
-                                  <label className="block text-xs text-gray-400 mb-1">Song Title</label>
-                                  <input
-                                    type="text"
-                                    value={walkupSongTitle}
-                                    onChange={(e) => setWalkupSongTitle(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-400 mb-1">Artist</label>
-                                  <input
-                                    type="text"
-                                    value={walkupArtistName}
-                                    onChange={(e) => setWalkupArtistName(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-400 mb-1">Spotify Track ID / URL (옵션)</label>
-                                  <input
-                                    type="text"
-                                    value={walkupSpotifyTrackId}
-                                    onChange={(e) => setWalkupSpotifyTrackId(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-400 mb-1">Start Time (seconds)</label>
-                                  <input
-                                    type="text"
-                                    value={walkupStartTimeSeconds}
-                                    onChange={(e) => setWalkupStartTimeSeconds(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-lg"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="mt-3">
-                                <button
-                                  type="button"
-                                  onClick={saveWalkupSong}
-                                  disabled={!walkupSongTitle.trim() || !walkupArtistName.trim()}
-                                  className="px-4 py-2 rounded-lg bg-[#daaa00] text-black font-bold hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
-                                >
-                                  Save Walkup Song
-                                </button>
-                              </div>
-                            </>
-                          )}
+                {playersLoading ? (
+                  <p className="text-gray-400 text-center py-8">Loading...</p>
+                ) : filtered.length === 0 ? (
+                  <p className="text-gray-400 text-center py-8">
+                    {playerSearch ? '검색 결과가 없습니다.' : '아직 등록된 선수가 없습니다.'}
+                  </p>
+                ) : (
+                  <div className="space-y-6 max-h-[700px] overflow-y-auto pr-1">
+                    {/* Active Players */}
+                    {activePl.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-green-400" />
+                          <h3 className="text-sm font-semibold text-green-400">활성 선수 ({activePl.length})</h3>
                         </div>
-                      ) : null}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {activePl.map((p) => renderPlayerCard(p))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inactive Players */}
+                    {inactivePl.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-gray-500" />
+                          <h3 className="text-sm font-semibold text-gray-400">비활성 선수 ({inactivePl.length})</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {inactivePl.map((p) => renderPlayerCard(p))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Walkup Song Editor - shown when a player is selected */}
+              {selectedPlayerId && (() => {
+                const sp = players.find((p) => p.id === selectedPlayerId);
+                if (!sp) return null;
+                return (
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold text-[#daaa00]">
+                        Walkup Song — #{sp.jerseyNumber} {sp.firstName} {sp.lastName}
+                      </h2>
+                      <button
+                        onClick={() => setSelectedPlayerId(null)}
+                        className="text-gray-400 hover:text-white text-sm"
+                      >
+                        닫기 ✕
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
+
+                    {walkupError && <div className="mb-3 text-sm text-red-400">{walkupError}</div>}
+
+                    {walkupLoading ? (
+                      <div className="text-sm text-gray-400 py-4">Loading...</div>
+                    ) : (
+                      <>
+                        {walkupSong?.spotify_track_url && (
+                          <a
+                            href={walkupSong.spotify_track_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block mb-3 text-xs text-[#daaa00] underline hover:text-yellow-300"
+                          >
+                            Open in Spotify
+                          </a>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Song Title</label>
+                            <input
+                              type="text"
+                              value={walkupSongTitle}
+                              onChange={(e) => setWalkupSongTitle(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Artist</label>
+                            <input
+                              type="text"
+                              value={walkupArtistName}
+                              onChange={(e) => setWalkupArtistName(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Spotify ID / URL</label>
+                            <input
+                              type="text"
+                              value={walkupSpotifyTrackId}
+                              onChange={(e) => setWalkupSpotifyTrackId(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Start (sec)</label>
+                            <input
+                              type="text"
+                              value={walkupStartTimeSeconds}
+                              onChange={(e) => setWalkupStartTimeSeconds(e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:border-[#daaa00] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={saveWalkupSong}
+                            disabled={!walkupSongTitle.trim() || !walkupArtistName.trim()}
+                            className="px-5 py-2 rounded-lg bg-[#daaa00] text-black font-bold hover:bg-yellow-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
-          </div>
-        ) : null}
+          );
+        })() : null}
 
         {(activeTab === 'batting' || activeTab === 'pitching') ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
