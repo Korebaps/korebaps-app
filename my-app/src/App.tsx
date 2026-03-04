@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
 import API_BASE_URL from './apiBaseUrl';
+import { useLanguage } from './i18n/LanguageContext';
 
 type Season = {
   id: number;
@@ -115,6 +116,7 @@ const mapApiNumber = (value?: number | string | null) => {
 
 
 function MainDashboard() {
+  const { t, lang } = useLanguage();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
   const [battingRecords, setBattingRecords] = useState<BattingRecord[]>([]);
@@ -514,14 +516,14 @@ function MainDashboard() {
       <div className="relative max-w-7xl mx-auto p-4 md:p-8 w-full overflow-x-hidden">
         <Header
           logoSrc={logo}
-          title="코레밥스 선수 기록"
-          subtitle="Korebaps Stats Dashboard"
+          title={t('app.title')}
+          subtitle={t('app.subtitle')}
           stats={[
             {
-              label: '최근 경기',
-              value: latestGameDate ? new Date(latestGameDate).toLocaleDateString('ko-KR') : '-',
+              label: t('app.latestGame'),
+              value: latestGameDate ? new Date(latestGameDate).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US') : '-',
             },
-            { label: '등록 선수', value: `${battingRecords.length}명` },
+            { label: t('app.registeredPlayers'), value: `${battingRecords.length}${t('suffix.players')}` },
           ]}
           action={(
             <div className="flex items-center gap-2 max-w-full overflow-x-auto whitespace-nowrap">
@@ -554,7 +556,7 @@ function MainDashboard() {
                 }}
                 className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                영상
+                {t('common.videos')}
               </button>
               <button
                 onClick={() => {
@@ -562,7 +564,7 @@ function MainDashboard() {
                 }}
                 className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                로스터
+                {t('common.roster')}
               </button>
               <button
                 onClick={() => {
@@ -570,7 +572,7 @@ function MainDashboard() {
                 }}
                 className="shrink-0 px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                경기 기록
+                {t('common.gameRecords')}
               </button>
             </div>
           )}
@@ -625,7 +627,7 @@ function MainDashboard() {
           <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-4 border-2 border-[#daaa00]">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold text-[#daaa00]">시즌 선택</h2>
+                <h2 className="text-xl font-bold text-[#daaa00]">{t('app.seasonSelect')}</h2>
               </div>
               {/* Season Select Section */}
 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -639,9 +641,9 @@ function MainDashboard() {
       className="w-full rounded-lg border-2 border-[#daaa00] bg-gray-800 px-3 py-2 text-sm text-white focus:border-[#daaa00] focus:outline-none focus:ring-2 focus:ring-[#daaa00]"
     >
       {/* Show Loading if empty */}
-      {seasons.length === 0 && <option>Loading seasons...</option>}
+      {seasons.length === 0 && <option>{t('app.loadingSeasons')}</option>}
 
-      <option value="">전체 시즌</option>
+      <option value="">{t('common.allSeasons')}</option>
       
       {/* Map through real data */}
       {seasons.map((season) => (
@@ -657,7 +659,7 @@ function MainDashboard() {
     onClick={handleCurrentSeasonClick} // Updated function
     className="w-full rounded-lg border-2 border-[#daaa00] px-3 py-2 text-sm font-semibold text-[#daaa00] transition hover:bg-[#daaa00] hover:text-black sm:w-auto"
   >
-    현재 시즌 선택
+    {t('common.currentSeason')}
   </button>
   
   <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
@@ -667,7 +669,7 @@ function MainDashboard() {
       onChange={(e) => setShowInactivePlayers(e.target.checked)}
       className="accent-[#daaa00]"
     />
-    은퇴 선수 포함
+    {t('app.includeRetired')}
   </label>
 </div>
             </div>
@@ -675,10 +677,10 @@ function MainDashboard() {
           <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
             <div className="flex items-center gap-2 mb-4">
               <Calculator className="w-6 h-6 text-[#daaa00]" />
-              <h2 className="text-xl font-bold text-[#daaa00]">타격 스탯</h2>
+              <h2 className="text-xl font-bold text-[#daaa00]">{t('app.battingStats')}</h2>
             </div>
             {battingLoading ? (
-              <div className="text-center text-gray-400">Loading...</div>
+              <div className="text-center text-gray-400">{t('common.loading')}</div>
             ) : battingError ? (
               <div className="text-center text-red-500">{battingError}</div>
             ) : (
@@ -690,7 +692,7 @@ function MainDashboard() {
                         {renderSortHeader('#', 'playerNumber', battingSort, setBattingSort, 'left')}
                       </th>
                       <th className="py-2 px-2 text-left">
-                        {renderSortHeader('선수명', 'playerName', battingSort, setBattingSort, 'left')}
+                        {renderSortHeader(t('common.player'), 'playerName', battingSort, setBattingSort, 'left')}
                       </th>
                       {selectedSeasonId && (
                         <th className="py-2 px-2 text-left">
@@ -867,10 +869,10 @@ function MainDashboard() {
           <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
             <div className="flex items-center gap-2 mb-4">
               <Calculator className="w-6 h-6 text-[#daaa00]" />
-              <h2 className="text-xl font-bold text-[#daaa00]">투구 스탯</h2>
+              <h2 className="text-xl font-bold text-[#daaa00]">{t('app.pitchingStats')}</h2>
             </div>
             {pitchingLoading ? (
-              <div className="text-center text-gray-400">Loading...</div>
+              <div className="text-center text-gray-400">{t('common.loading')}</div>
             ) : pitchingError ? (
               <div className="text-center text-red-500">{pitchingError}</div>
             ) : (
@@ -882,7 +884,7 @@ function MainDashboard() {
                       {renderSortHeader('#', 'playerNumber', pitchingSort, setPitchingSort, 'left')}
                     </th>
                     <th className="py-2 px-2 text-left">
-                      {renderSortHeader('선수명', 'playerName', pitchingSort, setPitchingSort, 'left')}
+                      {renderSortHeader(t('common.player'), 'playerName', pitchingSort, setPitchingSort, 'left')}
                     </th>
                     {selectedSeasonId && (
                       <th className="py-2 px-2 text-left">
@@ -899,10 +901,10 @@ function MainDashboard() {
                       {renderSortHeader('K', 'strikeouts', pitchingSort, setPitchingSort)}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('실점', 'runsAllowed', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.runsAllowed'), 'runsAllowed', pitchingSort, setPitchingSort)}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('자책', 'earnedRuns', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.earnedRuns'), 'earnedRuns', pitchingSort, setPitchingSort)}
                     </th>
                     <th className="py-2 px-2">
                       {renderSortHeader('H', 'hitsAllowed', pitchingSort, setPitchingSort)}
@@ -911,7 +913,7 @@ function MainDashboard() {
                       {renderSortHeader('BB', 'walks', pitchingSort, setPitchingSort)}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('투구수', 'pitchCount', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.pitchCount'), 'pitchCount', pitchingSort, setPitchingSort)}
                     </th>
                     <th className="py-2 px-2">
                       {renderSortHeader('ERA', 'era', pitchingSort, setPitchingSort)}
@@ -1017,7 +1019,7 @@ function MainDashboard() {
             }}
             className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:border-[#daaa00] hover:text-[#daaa00] transition text-sm"
           >
-            관리자 모드
+            {t('common.admin')}
           </button>
         </div>
 

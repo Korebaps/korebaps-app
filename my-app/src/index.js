@@ -8,6 +8,7 @@ import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
 import GameRecordsPage from './pages/GameRecordsPage.tsx';
 import GameDetailPage from './pages/GameDetailPage.tsx';
 import Videos from './Videos.tsx';
+import { LanguageProvider } from './i18n/LanguageContext.tsx';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -34,7 +35,13 @@ const RootComponent = isPlayerPage
 
 root.render(
   <React.StrictMode>
-    <RootComponent />
+    {isAdminPage ? (
+      <AdminDashboard />
+    ) : (
+      <LanguageProvider>
+        <RootComponent />
+      </LanguageProvider>
+    )}
   </React.StrictMode>
 );
 

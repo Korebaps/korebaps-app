@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
+import { useLanguage } from './i18n/LanguageContext';
 
 function Videos() {
+  const { t } = useLanguage();
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   const feedUrl = useMemo(() => (
@@ -99,8 +101,8 @@ function Videos() {
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <Header
           logoSrc={logo}
-          title="코레밥스 영상"
-          subtitle="Korebaps Videos"
+          title={t('videos.title')}
+          subtitle={t('videos.subtitle')}
           stats={[
             { label: 'YouTube', value: '@Korebaps' },
             
@@ -111,7 +113,7 @@ function Videos() {
                 onClick={() => window.location.href = '/'}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                메인으로
+                {t('common.home')}
               </button>
               <a
                 href="https://www.youtube.com/@Korebaps?sub_confirmation=1"
@@ -122,7 +124,7 @@ function Videos() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
-                구독하기
+                {t('videos.subscribe')}
               </a>
             </div>
           )}
@@ -131,12 +133,12 @@ function Videos() {
         {selectedVideo && (
           <div className="mb-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-[#daaa00]">재생 중</h2>
+              <h2 className="text-2xl font-bold text-[#daaa00]">{t('videos.nowPlaying')}</h2>
               <button
                 onClick={() => setSelectedVideo(null)}
                 className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition"
               >
-                닫기
+                {t('common.close')}
               </button>
             </div>
             <div className="aspect-video bg-black rounded-lg overflow-hidden">
@@ -154,14 +156,14 @@ function Videos() {
 
         <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#daaa00]">최신 영상</h2>
+            <h2 className="text-2xl font-bold text-[#daaa00]">{t('videos.latestVideos')}</h2>
             <a
               href="https://www.youtube.com/@Korebaps/videos"
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-lg bg-[#daaa00] text-black font-bold hover:bg-yellow-500 transition"
             >
-              전체 보기
+              {t('videos.viewAll')}
             </a>
           </div>
 
@@ -183,14 +185,14 @@ function Videos() {
             <div className="rounded-xl border border-red-700/60 bg-red-900/20 p-4 text-red-200">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-semibold">영상을 불러오지 못했습니다.</p>
+                  <p className="font-semibold">{t('videos.loadError')}</p>
                   <p className="text-sm mt-1 opacity-90">{error}</p>
                 </div>
                 <button
                   onClick={() => window.location.reload()}
                   className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition"
                 >
-                  새로고침
+                  {t('common.refresh')}
                 </button>
               </div>
             </div>
@@ -198,8 +200,8 @@ function Videos() {
 
           {!loading && !error && videos.length === 0 && (
             <div className="rounded-xl border border-gray-700 bg-gray-900/30 p-6 text-gray-200">
-              <p className="font-semibold">표시할 영상이 없습니다.</p>
-              <p className="text-sm mt-1 text-gray-400">잠시 후 다시 시도해주세요.</p>
+              <p className="font-semibold">{t('videos.noVideos')}</p>
+              <p className="text-sm mt-1 text-gray-400">{t('videos.tryLater')}</p>
             </div>
           )}
 
@@ -257,7 +259,7 @@ function Videos() {
 
           <div className="mt-8 text-center">
             <p className="text-gray-400 mb-4">
-              더 많은 영상을 보려면 YouTube 채널을 방문하세요!
+              {t('videos.visitChannel')}
             </p>
             <a
               href="https://www.youtube.com/@Korebaps/videos"
@@ -268,7 +270,7 @@ function Videos() {
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
-              YouTube에서 모든 영상 보기
+              {t('videos.viewAllYouTube')}
             </a>
           </div>
         </section>

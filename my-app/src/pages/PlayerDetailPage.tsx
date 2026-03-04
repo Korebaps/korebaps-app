@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../apiBaseUrl';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type PlayerGameBattingRow = {
   game_id: number;
@@ -111,6 +112,7 @@ const formatValue = (value?: number | string | null) =>
   value === null || value === undefined || value === '' ? '-' : value;
 
 export default function PlayerDetailPage() {
+  const { t } = useLanguage();
   const params = new URLSearchParams(window.location.search);
   const playerNumber = params.get('playerNumber') ?? '';
   const playerName = params.get('playerName') ?? '';
@@ -295,23 +297,23 @@ export default function PlayerDetailPage() {
 
   const selectedSeasonLabel = useMemo(() => {
     if (!selectedSeasonId) {
-      return '전체 시즌';
+      return t('common.allSeasons');
     }
     return seasons.find((season) => season.id === selectedSeasonId)?.label ?? '-';
-  }, [seasons, selectedSeasonId]);
+  }, [seasons, selectedSeasonId, t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <Header
           logoSrc={logo}
-          title="코레밥스 선수 기록"
-          subtitle="Korebaps Stats Dashboard"
+          title={t('player.title')}
+          subtitle={t('player.subtitle')}
           stats={[
-            { label: '선수명', value: playerName || '-' },
-            { label: '등번호', value: playerNumber || '-' },
-            { label: '선택 시즌', value: selectedSeasonLabel },
-            { label: '상태', value: isActive ? 'Active' : 'Inactive' },
+            { label: t('player.name'), value: playerName || '-' },
+            { label: t('player.jerseyNumber'), value: playerNumber || '-' },
+            { label: t('player.selectedSeason'), value: selectedSeasonLabel },
+            { label: t('common.status'), value: isActive ? 'Active' : 'Inactive' },
           ]}
           action={(
             <div className="flex flex-wrap gap-2">
@@ -321,7 +323,7 @@ export default function PlayerDetailPage() {
                 }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                현역 로스터
+                {t('common.activeRoster')}
               </button>
               <button
                 onClick={() => {
@@ -329,7 +331,7 @@ export default function PlayerDetailPage() {
                 }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
-                메인으로
+                {t('common.home')}
               </button>
             </div>
           )}
@@ -339,7 +341,7 @@ export default function PlayerDetailPage() {
           <div className="mt-4 p-4 rounded-xl bg-gray-700/50 border border-gray-500 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-gray-400 animate-pulse" />
             <span className="text-gray-300 font-medium">
-              이 선수는 현재 <span className="text-gray-200 font-bold">Inactive</span> 상태입니다
+              {t('player.inactiveMsg')} <span className="text-gray-200 font-bold">{t('player.inactiveStatus')}</span>
             </span>
           </div>
         )}
@@ -356,11 +358,11 @@ export default function PlayerDetailPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-xs text-gray-400 text-center px-2">No album art</div>
+                    <div className="text-xs text-gray-400 text-center px-2">{t('player.noAlbumArt')}</div>
                   )}
                 </div>
                 <div>
-                  <div className="text-sm text-gray-300">Walkup Song</div>
+                  <div className="text-sm text-gray-300">{t('player.walkupSong')}</div>
                   <div className="text-lg font-bold text-[#daaa00]">{walkupSong.song_title}</div>
                   <div className="text-sm text-gray-200">{walkupSong.artist_name}</div>
                 </div>
@@ -373,7 +375,7 @@ export default function PlayerDetailPage() {
                   rel="noreferrer"
                   className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
                 >
-                  Open in Spotify
+                  {t('player.openSpotify')}
                 </a>
               ) : null}
             </div>
@@ -399,11 +401,11 @@ export default function PlayerDetailPage() {
           <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
             <div className="flex items-center gap-2">
               <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-              <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>전체 타격</h2>
+              <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.careerBatting')}</h2>
               {!isActive && <span className="text-xs text-gray-400 ml-2">(Inactive)</span>}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-300">
-              <span>시즌 선택</span>
+              <span>{t('common.selectSeason')}</span>
               <select
                 value={selectedSeasonId ?? ''}
                 onChange={(event) => {
@@ -412,7 +414,7 @@ export default function PlayerDetailPage() {
                 }}
                 className="bg-gray-900 border border-gray-500 text-white rounded-lg px-3 py-2"
               >
-                <option value="">전체 시즌</option>
+                <option value="">{t('common.allSeasons')}</option>
                 {seasons.map((season) => (
                   <option key={season.id} value={season.id}>
                     {season.label}
@@ -422,13 +424,13 @@ export default function PlayerDetailPage() {
             </div>
           </div>
           {!playerNumber || !playerName ? (
-            <div className="text-center text-gray-400">선수 정보를 찾을 수 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">{t('common.loading')}</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : !careerBatting ? (
-            <div className="text-center text-gray-400">커리어 전체 타격 기록이 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.noBattingStats')}</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm text-white">
               <div>
@@ -488,17 +490,17 @@ export default function PlayerDetailPage() {
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-6 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
           <div className="flex items-center gap-2 mb-4">
             <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>전체 투구</h2>
+            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.careerPitching')}</h2>
             {!isActive && <span className="text-xs text-gray-400 ml-2">(Inactive)</span>}
           </div>
           {!playerNumber || !playerName ? (
-            <div className="text-center text-gray-400">선수 정보를 찾을 수 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">{t('common.loading')}</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : !careerPitching ? (
-            <div className="text-center text-gray-400">커리어 투구 기록이 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.noPitchingStats')}</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm text-white">
               <div>
@@ -538,24 +540,24 @@ export default function PlayerDetailPage() {
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-8 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
           <div className="flex items-center gap-2 mb-4">
             <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>경기별 타격 스탯</h2>
+            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gameBattingStats')}</h2>
           </div>
           {!playerNumber || !playerName ? (
-            <div className="text-center text-gray-400">선수 정보를 찾을 수 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">{t('common.loading')}</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : gameStats.length === 0 ? (
-            <div className="text-center text-gray-400">등록된 경기 기록이 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-white border-collapse">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">일자</th>
-                    <th className="py-2 px-2 text-left">상대</th>
-                    <th className="py-2 px-2">스코어</th>
+                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2">{t('common.score')}</th>
                     <th className="py-2 px-2">PA</th>
                     <th className="py-2 px-2">AB</th>
                     <th className="py-2 px-2">1B</th>
@@ -609,24 +611,24 @@ export default function PlayerDetailPage() {
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-6 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
           <div className="flex items-center gap-2 mb-4">
             <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>경기별 투구 스탯</h2>
+            <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gamePitchingStats')}</h2>
           </div>
           {!playerNumber || !playerName ? (
-            <div className="text-center text-gray-400">선수 정보를 찾을 수 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">{t('common.loading')}</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : pitchingStats.length === 0 ? (
-            <div className="text-center text-gray-400">등록된 경기 기록이 없습니다.</div>
+            <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-white border-collapse">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">일자</th>
-                    <th className="py-2 px-2 text-left">상대</th>
-                    <th className="py-2 px-2">스코어</th>
+                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2">{t('common.score')}</th>
                     <th className="py-2 px-2">IP</th>
                     <th className="py-2 px-2">W</th>
                     <th className="py-2 px-2">K</th>

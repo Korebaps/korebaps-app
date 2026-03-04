@@ -1,3 +1,5 @@
+import { useLanguage } from '../i18n/LanguageContext';
+
 const battingRows = [
   { label: '1B', points: '+1' },
   { label: '2B', points: '+2' },
@@ -18,15 +20,17 @@ const pitchingRows = [
 ];
 
 export function PointTable() {
+  const { t } = useLanguage();
+
   return (
     <section className="mt-8 bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-[#daaa00] rounded-2xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-[#daaa00]">포인트 기준표</h2>
-        <span className="text-xs text-gray-500">코레밥스 스코어 룰</span>
+        <h2 className="text-xl font-bold text-[#daaa00]">{t('points.heading')}</h2>
+        <span className="text-xs text-gray-500">{t('points.rules')}</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <div className="text-sm font-semibold text-gray-300 mb-3">타격</div>
+          <div className="text-sm font-semibold text-gray-300 mb-3">{t('points.batting')}</div>
           <div className="grid grid-cols-2 gap-3">
             {battingRows.map((row) => (
               <div key={row.label} className="bg-gray-800 border border-gray-700 rounded-lg p-3">
@@ -37,7 +41,7 @@ export function PointTable() {
           </div>
         </div>
         <div>
-          <div className="text-sm font-semibold text-gray-300 mb-3">투구</div>
+          <div className="text-sm font-semibold text-gray-300 mb-3">{t('points.pitching')}</div>
           <div className="grid grid-cols-2 gap-3">
             {pitchingRows.map((row) => (
               <div key={row.label} className="bg-gray-800 border border-gray-700 rounded-lg p-3">

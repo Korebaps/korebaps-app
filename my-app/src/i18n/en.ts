@@ -1,0 +1,135 @@
+const en: Record<string, string> = {
+  // Header
+  'header.logoAlt': 'Korebaps Logo',
+
+  // Footer
+  'footer.copyright': '© 2026 Korebaps Stats Dashboard. All rights reserved.',
+
+  // Visitor Banner
+  'visitor.unavailable': 'Visitor stats unavailable',
+  'visitor.loading': 'Loading visitor stats...',
+  'visitor.today': 'Today',
+  'visitor.month': 'Month',
+  'visitor.total': 'Total',
+
+  // Common
+  'common.loading': 'Loading...',
+  'common.home': 'Home',
+  'common.activeRoster': 'Active Roster',
+  'common.gameRecords': 'Game Records',
+  'common.videos': 'Videos',
+  'common.roster': 'Roster',
+  'common.admin': 'Admin',
+  'common.allSeasons': 'All Seasons',
+  'common.selectSeason': 'Select Season',
+  'common.currentSeason': 'Current Season',
+  'common.player': 'Player',
+  'common.date': 'Date',
+  'common.opponent': 'Opponent',
+  'common.score': 'Score',
+  'common.season': 'Season',
+  'common.status': 'Status',
+  'common.close': 'Close',
+  'common.refresh': 'Refresh',
+  'suffix.players': '',
+  'suffix.games': ' games',
+
+  // App (Main Dashboard)
+  'app.title': 'Korebaps Player Stats',
+  'app.subtitle': 'Korebaps Stats Dashboard',
+  'app.latestGame': 'Latest Game',
+  'app.registeredPlayers': 'Players',
+  'app.seasonSelect': 'Select Season',
+  'app.loadingSeasons': 'Loading seasons...',
+  'app.includeRetired': 'Include Retired',
+  'app.battingStats': 'Batting Stats',
+  'app.pitchingStats': 'Pitching Stats',
+  'app.runsAllowed': 'RA',
+  'app.earnedRuns': 'ER',
+  'app.pitchCount': 'Pitches',
+
+  // Player Detail
+  'player.title': 'Korebaps Player Stats',
+  'player.subtitle': 'Korebaps Stats Dashboard',
+  'player.name': 'Player',
+  'player.jerseyNumber': 'Jersey #',
+  'player.selectedSeason': 'Season',
+  'player.notFound': 'Player not found.',
+  'player.inactiveMsg': 'This player is currently',
+  'player.inactiveStatus': 'Inactive',
+  'player.noAlbumArt': 'No album art',
+  'player.walkupSong': 'Walkup Song',
+  'player.openSpotify': 'Open in Spotify',
+  'player.careerBatting': 'Career Batting',
+  'player.careerPitching': 'Career Pitching',
+  'player.noBattingStats': 'No career batting stats.',
+  'player.noPitchingStats': 'No career pitching stats.',
+  'player.gameBattingStats': 'Game Batting Stats',
+  'player.gamePitchingStats': 'Game Pitching Stats',
+  'player.noGameRecords': 'No game records found.',
+
+  // Active Roster
+  'roster.title': 'Korebaps Active Roster',
+  'roster.subtitle': 'Korebaps Active Roster',
+  'roster.totalPlayers': 'Players',
+  'roster.updated': 'Updated',
+  'roster.activeRoster': 'Active Roster',
+  'roster.inactiveRoster': 'Inactive Roster',
+  'roster.clickExpand': '(click to expand)',
+  'roster.noActive': 'No active players found.',
+  'roster.noInactive': 'No inactive players found.',
+
+  // Game Records
+  'games.title': 'Korebaps Game Records',
+  'games.subtitle': 'Korebaps Game Records',
+  'games.totalGames': 'Total Games',
+  'games.selected': 'Selected',
+  'games.all': 'All',
+  'games.heading': 'Game Records',
+  'games.sortedRecent': 'Sorted by most recent.',
+  'games.noRecords': 'No game records found.',
+  'games.friendly': 'Friendly',
+  'games.regular': 'Regular',
+  'games.win': 'W',
+  'games.loss': 'L',
+  'games.draw': 'D',
+  'games.score': 'Score',
+
+  // Game Detail
+  'gameDetail.title': 'Korebaps Game Detail',
+  'gameDetail.subtitle': 'Korebaps Game Detail',
+  'gameDetail.gameDate': 'Game Date',
+  'gameDetail.battingStats': 'Game Batting Stats',
+  'gameDetail.pitchingStats': 'Game Pitching Stats',
+  'gameDetail.notFound': 'Game not found.',
+  'gameDetail.noBatting': 'No batting records found.',
+  'gameDetail.noPitching': 'No pitching records found.',
+
+  // Videos
+  'videos.title': 'Korebaps Videos',
+  'videos.subtitle': 'Korebaps Videos',
+  'videos.subscribe': 'Subscribe',
+  'videos.nowPlaying': 'Now Playing',
+  'videos.latestVideos': 'Latest Videos',
+  'videos.viewAll': 'View All',
+  'videos.loadError': 'Failed to load videos.',
+  'videos.noVideos': 'No videos available.',
+  'videos.tryLater': 'Please try again later.',
+  'videos.visitChannel': 'Visit our YouTube channel for more videos!',
+  'videos.viewAllYouTube': 'View All on YouTube',
+
+  // Point Table
+  'points.heading': 'Point Table',
+  'points.rules': 'Korebaps Score Rules',
+  'points.batting': 'Batting',
+  'points.pitching': 'Pitching',
+
+  // Record Summary
+  'summary.heading': 'Game Summary',
+  'summary.battingTop3': 'Batting Top 3',
+  'summary.pitchingTop3': 'Pitching Top 3',
+  'summary.noBatting': 'No batting records found.',
+  'summary.noPitching': 'No pitching records found.',
+};
+
+export default en;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import API_BASE_URL from '../apiBaseUrl';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type VisitorStats = { today: number; month: number; total: number };
 
@@ -35,6 +36,7 @@ function markRecorded() {
 }
 
 export default function VisitorBanner() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<VisitorStats | null>(null);
   const [error, setError] = useState(false);
 
@@ -73,7 +75,7 @@ export default function VisitorBanner() {
   if (error) {
     return (
       <div className="mt-4 pt-3 border-t border-[#daaa00]/30 text-center text-xs text-gray-500 font-mono">
-        Visitor stats unavailable
+        {t('visitor.unavailable')}
       </div>
     );
   }
@@ -81,14 +83,14 @@ export default function VisitorBanner() {
   if (!stats) {
     return (
       <div className="mt-4 pt-3 border-t border-[#daaa00]/30 text-center text-xs text-gray-500 font-mono">
-        Loading visitor stats...
+        {t('visitor.loading')}
       </div>
     );
   }
 
   return (
     <div className="mt-4 pt-3 border-t border-[#daaa00]/30 text-center text-xs text-gray-400 font-mono tracking-wide">
-      Today: {stats.today.toLocaleString()} &nbsp;|&nbsp; Month: {stats.month.toLocaleString()} &nbsp;|&nbsp; Total: {stats.total.toLocaleString()}
+      {t('visitor.today')}: {stats.today.toLocaleString()} &nbsp;|&nbsp; {t('visitor.month')}: {stats.month.toLocaleString()} &nbsp;|&nbsp; {t('visitor.total')}: {stats.total.toLocaleString()}
     </div>
   );
 }

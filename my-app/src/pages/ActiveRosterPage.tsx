@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../apiBaseUrl';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type ActivePlayer = {
   id: number;
@@ -15,6 +16,7 @@ type ActivePlayer = {
 
 
 export default function ActiveRosterPage() {
+  const { t } = useLanguage();
   const [players, setPlayers] = useState<ActivePlayer[]>([]);
   const [inactivePlayers, setInactivePlayers] = useState<ActivePlayer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +60,12 @@ export default function ActiveRosterPage() {
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <Header
           logoSrc={logo}
-          title="코레밥스 현역 로스터"
-          subtitle="Korebaps Active Roster"
+          title={t('roster.title')}
+          subtitle={t('roster.subtitle')}
           stats={[
-            { label: '총 선수', value: `${players.length}명` },
-            { label: '업데이트', value: 'Live' },
-            { label: '상태', value: 'Active' },
+            { label: t('roster.totalPlayers'), value: `${players.length}${t('suffix.players')}` },
+            { label: t('roster.updated'), value: 'Live' },
+            { label: t('common.status'), value: 'Active' },
           ]}
           action={(
             <button
@@ -72,7 +74,7 @@ export default function ActiveRosterPage() {
               }}
               className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
             >
-              메인으로
+              {t('common.home')}
             </button>
           )}
         />
@@ -80,15 +82,15 @@ export default function ActiveRosterPage() {
         <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-6 h-6 text-[#daaa00]" />
-            <h2 className="text-xl font-bold text-[#daaa00]">Active Roster</h2>
+            <h2 className="text-xl font-bold text-[#daaa00]">{t('roster.activeRoster')}</h2>
           </div>
 
           {loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">{t('common.loading')}</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : players.length === 0 ? (
-            <div className="text-center text-gray-400">등록된 현역 선수가 없습니다.</div>
+            <div className="text-center text-gray-400">{t('roster.noActive')}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {players.map((player) => (
@@ -122,18 +124,18 @@ export default function ActiveRosterPage() {
             <summary className="cursor-pointer select-none">
               <div className="flex items-center gap-2">
                 <Users className="w-6 h-6 text-gray-300" />
-                <h2 className="text-xl font-bold text-gray-200">Inactive Roster</h2>
-                <span className="ml-auto text-xs text-gray-400">(click to expand)</span>
+                <h2 className="text-xl font-bold text-gray-200">{t('roster.inactiveRoster')}</h2>
+                <span className="ml-auto text-xs text-gray-400">{t('roster.clickExpand')}</span>
               </div>
             </summary>
 
             <div className="mt-4">
               {loading ? (
-                <div className="text-center text-gray-400">Loading...</div>
+                <div className="text-center text-gray-400">{t('common.loading')}</div>
               ) : error ? (
                 <div className="text-center text-red-500">{error}</div>
               ) : inactivePlayers.length === 0 ? (
-                <div className="text-center text-gray-400">등록된 비현역 선수가 없습니다.</div>
+                <div className="text-center text-gray-400">{t('roster.noInactive')}</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {inactivePlayers.map((player) => (
