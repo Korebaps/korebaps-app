@@ -613,6 +613,174 @@ app.delete('/api/pitching-stats', requireAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const gameId = Number(req.body?.gameId);
+    const battingStats = req.body?.battingStats ?? [];
+    const pitchingStats = req.body?.pitchingStats ?? [];
+
+    if (!gameId) {
+      res.status(400).json({ error: 'Missing gameId' });
+      conn.release();
+      return;
+    }
+
+    const [gameRows] = await conn.execute('SELECT game_id FROM games WHERE game_id = ?', [gameId]);
+    if (gameRows.length === 0) {
+      res.status(404).json({ error: 'Game not found' });
+      conn.release();
+      return;
+    }
+
+    const allPlayerIds = [
+      ...battingStats.map((s) => s.playerId),
+      ...pitchingStats.map((s) => s.playerId),
+    ].filter(Boolean);
+
+    if (allPlayerIds.length > 0) {
+      const placeholders = allPlayerIds.map(() => '?').join(',');
+      const [activePlayers] = await conn.execute(
+        `SELECT player_id FROM players WHERE player_id IN (${placeholders}) AND is_active = 1`,
+        allPlayerIds,
+      );
+      const activeIds = new Set(activePlayers.map((p) => p.player_id));
+      const invalid = allPlayerIds.filter((id) => !activeIds.has(id));
+      if (invalid.length > 0) {
+        res.status(400).json({ error: `Players not active: ${[...new Set(invalid)].join(', ')}` });
+        conn.release();
+        return;
+      }
+    }
+
+    await conn.beginTransaction();
+
+    let battingCount = 0;
+    for (const stat of battingStats) {
+      const playerId = Number(stat.playerId);
+      if (!playerId) continue;
+
+      const payload = {
+        plateAppearances: Number(stat.plateAppearances ?? 0) || 0,
+        singles: Number(stat.singles ?? 0) || 0,
+        doubles: Number(stat.doubles ?? 0) || 0,
+        triples: Number(stat.triples ?? 0) || 0,
+        homeRuns: Number(stat.homeRuns ?? 0) || 0,
+        runs: Number(stat.runsScored ?? 0) || 0,
+        rbi: Number(stat.rbi ?? 0) || 0,
+        walks: Number(stat.walks ?? 0) || 0,
+        strikeouts: Number(stat.strikeouts ?? 0) || 0,
+        hitByPitch: Number(stat.hitByPitch ?? 0) || 0,
+        sacs: Number(stat.sacs ?? 0) || 0,
+        stolenBases: Number(stat.stolenBases ?? 0) || 0,
+        caughtStealing: Number(stat.caughtStealing ?? 0) || 0,
+        isMVP: stat.isMVP ? 1 : 0,
+      };
+
+      const battingPoints = calculateBattingPoints(payload);
+
+      const [updateResult] = await conn.execute(
+        `UPDATE batting_stats SET
+          plate_appearances = ?, singles = ?, doubles = ?, triples = ?,
+          home_runs = ?, runs_scored = ?, rbi = ?, walks = ?,
+          strikeouts = ?, hit_by_pitch = ?, sacs = ?, stolen_bases = ?,
+          caught_stealing = ?, is_mvp = ?, batting_points = ?
+        WHERE game_id = ? AND player_id = ?`,
+        [
+          payload.plateAppearances, payload.singles, payload.doubles, payload.triples,
+          payload.homeRuns, payload.runs, payload.rbi, payload.walks,
+          payload.strikeouts, payload.hitByPitch, payload.sacs, payload.stolenBases,
+          payload.caughtStealing, payload.isMVP, battingPoints,
+          gameId, playerId,
+        ],
+      );
+
+      if (updateResult.affectedRows === 0) {
+        await conn.execute(
+          `INSERT INTO batting_stats (
+            game_id, player_id, plate_appearances, singles, doubles, triples,
+            home_runs, runs_scored, rbi, walks, strikeouts, hit_by_pitch,
+            sacs, stolen_bases, caught_stealing, is_mvp, batting_points
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            gameId, playerId,
+            payload.plateAppearances, payload.singles, payload.doubles, payload.triples,
+            payload.homeRuns, payload.runs, payload.rbi, payload.walks,
+            payload.strikeouts, payload.hitByPitch, payload.sacs, payload.stolenBases,
+            payload.caughtStealing, payload.isMVP, battingPoints,
+          ],
+        );
+      }
+      battingCount++;
+    }
+
+    let pitchingCount = 0;
+    for (const stat of pitchingStats) {
+      const playerId = Number(stat.playerId);
+      if (!playerId) continue;
+
+      const outsRecorded = Number(stat.outsRecorded ?? 0) || 0;
+      const payload = {
+        pitchesThrown: Number(stat.pitchesThrown ?? 0) || 0,
+        hitsAllowed: Number(stat.hitsAllowed ?? 0) || 0,
+        runsAllowed: Number(stat.runsAllowed ?? 0) || 0,
+        earnedRuns: Number(stat.earnedRuns ?? 0) || 0,
+        strikeouts: Number(stat.strikeouts ?? 0) || 0,
+        walks: Number(stat.walksAllowed ?? 0) || 0,
+        hitBatters: Number(stat.hitBatters ?? 0) || 0,
+        wins: Number(stat.w ?? 0) || 0,
+        losses: Number(stat.l ?? 0) || 0,
+        saveEarned: Number(stat.saveEarned ?? 0) || 0,
+        isMVP: stat.isMVP ? 1 : 0,
+      };
+
+      const [updateResult] = await conn.execute(
+        `UPDATE pitching_stats SET
+          outs_recorded = ?, pitches_thrown = ?, hits_allowed = ?,
+          runs_allowed = ?, earned_runs = ?, strikeouts = ?,
+          walks_allowed = ?, hit_batters = ?, w = ?, l = ?,
+          save_earned = ?, is_mvp = ?
+        WHERE game_id = ? AND player_id = ?`,
+        [
+          outsRecorded, payload.pitchesThrown, payload.hitsAllowed,
+          payload.runsAllowed, payload.earnedRuns, payload.strikeouts,
+          payload.walks, payload.hitBatters, payload.wins, payload.losses,
+          payload.saveEarned, payload.isMVP,
+          gameId, playerId,
+        ],
+      );
+
+      if (updateResult.affectedRows === 0) {
+        await conn.execute(
+          `INSERT INTO pitching_stats (
+            game_id, player_id, outs_recorded, pitches_thrown, hits_allowed,
+            runs_allowed, earned_runs, strikeouts, walks_allowed, hit_batters,
+            w, l, save_earned, is_mvp
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            gameId, playerId,
+            outsRecorded, payload.pitchesThrown, payload.hitsAllowed,
+            payload.runsAllowed, payload.earnedRuns, payload.strikeouts,
+            payload.walks, payload.hitBatters, payload.wins, payload.losses,
+            payload.saveEarned, payload.isMVP,
+          ],
+        );
+      }
+      pitchingCount++;
+    }
+
+    await conn.commit();
+    conn.release();
+
+    res.json({ ok: true, inserted: { batting: battingCount, pitching: pitchingCount } });
+  } catch (error) {
+    await conn.rollback().catch(() => {});
+    conn.release();
+    console.error('Failed to upload game stats', error);
+    res.status(500).json({ error: 'Failed to upload game stats' });
+  }
+});
+
 app.get('/api/player-career-batting-stats', async (req, res) => {
   try {
     const jerseyNumber = req.query.jerseyNumber;

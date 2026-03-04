@@ -4,6 +4,7 @@ import { BattingRecordForm } from './components/BattingRecordForm';
 import { PitchingRecordForm } from './components/PitchingRecordForm';
 import { RecordSummary } from './components/RecordSummary';
 import { PointTable } from './components/PointTable';
+import { CsvUploadForm } from './components/CsvUploadForm.tsx';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
@@ -1048,6 +1049,16 @@ export default function AdminDashboard() {
           >
             투구 기록
           </button>
+          <button
+            onClick={() => setActiveTab('csvUpload')}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all border-2 ${
+              activeTab === 'csvUpload'
+                ? 'bg-[#daaa00] text-black border-[#daaa00] shadow-lg'
+                : 'bg-gray-900 text-[#daaa00] border-[#daaa00] hover:bg-gray-800'
+            }`}
+          >
+            CSV 업로드
+          </button>
         </div>
 
         {activeTab === 'seasons' ? (
@@ -1794,6 +1805,15 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+        ) : null}
+
+        {activeTab === 'csvUpload' ? (
+          <CsvUploadForm
+            seasons={seasons}
+            activePlayers={activePlayers}
+            adminToken={adminToken!}
+            apiBaseUrl={API_BASE_URL}
+          />
         ) : null}
 
         <PointTable />
