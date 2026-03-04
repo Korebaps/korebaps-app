@@ -1,4 +1,4 @@
-const en: Record<string, string> = {
+const en = {
   // Header
   'header.logoAlt': 'Korebaps Logo',
 

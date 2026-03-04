@@ -8,7 +8,7 @@ import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
 import GameRecordsPage from './pages/GameRecordsPage.tsx';
 import GameDetailPage from './pages/GameDetailPage.tsx';
 import Videos from './Videos.tsx';
-import { LanguageProvider } from './i18n/LanguageContext.tsx';
+import { LanguageProvider } from './i18n/LanguageContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
