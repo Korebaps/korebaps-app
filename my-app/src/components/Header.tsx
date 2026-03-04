@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import VisitorBanner from './VisitorBanner';
-import LanguageToggle from './LanguageToggle';
+import VisitorBanner from './VisitorBanner.js';
+import LanguageToggle from './LanguageToggle.js';
 import { useLanguage } from '../i18n/LanguageContext';
 
 type StatItem = {
