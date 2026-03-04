@@ -672,20 +672,18 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
         isMVP: stat.isMVP ? 1 : 0,
       };
 
-      const battingPoints = calculateBattingPoints(payload);
-
       const [updateResult] = await pool.execute(
         `UPDATE batting_stats SET
           plate_appearances = ?, singles = ?, doubles = ?, triples = ?,
           home_runs = ?, runs_scored = ?, rbi = ?, walks = ?,
           strikeouts = ?, hit_by_pitch = ?, sacs = ?, stolen_bases = ?,
-          caught_stealing = ?, is_mvp = ?, batting_points = ?
+          caught_stealing = ?, is_mvp = ?
         WHERE game_id = ? AND player_id = ?`,
         [
           payload.plateAppearances, payload.singles, payload.doubles, payload.triples,
           payload.homeRuns, payload.runs, payload.rbi, payload.walks,
           payload.strikeouts, payload.hitByPitch, payload.sacs, payload.stolenBases,
-          payload.caughtStealing, payload.isMVP, battingPoints,
+          payload.caughtStealing, payload.isMVP,
           gameId, playerId,
         ],
       );
@@ -695,14 +693,14 @@ app.post('/api/upload-game-stats', requireAdmin, async (req, res) => {
           `INSERT INTO batting_stats (
             game_id, player_id, plate_appearances, singles, doubles, triples,
             home_runs, runs_scored, rbi, walks, strikeouts, hit_by_pitch,
-            sacs, stolen_bases, caught_stealing, is_mvp, batting_points
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            sacs, stolen_bases, caught_stealing, is_mvp
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             gameId, playerId,
             payload.plateAppearances, payload.singles, payload.doubles, payload.triples,
             payload.homeRuns, payload.runs, payload.rbi, payload.walks,
             payload.strikeouts, payload.hitByPitch, payload.sacs, payload.stolenBases,
-            payload.caughtStealing, payload.isMVP, battingPoints,
+            payload.caughtStealing, payload.isMVP,
           ],
         );
       }
