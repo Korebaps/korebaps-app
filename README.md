@@ -78,7 +78,6 @@ korebaps-app/
 │   ├── index.js             # Express 서버
 │   └── package.json
 ├── database/                # 데이터베이스 설정
-├── main.tsx                # 메인 애플리케이션 진입점
 ├── Dockerfile              # Docker 설정
 ├── nginx.conf              # Nginx 설정
 └── cloudbuild.yaml         # Google Cloud Build 설정
