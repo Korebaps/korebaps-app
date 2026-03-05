@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useMyPlayer } from '../hooks/useMyPlayer.ts';
 import API_BASE_URL from '../apiBaseUrl';
 
 const THROTTLE_KEY = 'korebaps_visitor_last_record';
@@ -34,6 +36,7 @@ function markRecorded() {
 export default function Header({ logoSrc, title, subtitle, stats, action, social }) {
   var ctx = useLanguage();
   var lang = ctx.lang;
+  var { myPlayer } = useMyPlayer();
   var setLang = ctx.setLang;
   var t = ctx.t;
 
@@ -101,13 +104,13 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
     <div className="bg-gradient-to-r from-black to-gray-900 rounded-2xl shadow-2xl p-4 sm:p-6 mb-6 border-2 border-[#daaa00]">
       {/* Row 1: Logo + Title | Language toggle */}
       <div className="flex items-center justify-between gap-3 mb-4">
-        <a href="/" className="flex items-center gap-3 min-w-0 cursor-pointer hover:opacity-80 transition">
+        <Link to="/" className="flex items-center gap-3 min-w-0 cursor-pointer hover:opacity-80 transition">
           <img src={logoSrc} alt={t('header.logoAlt')} className="w-12 h-12 sm:w-16 sm:h-16 object-contain shrink-0" />
           <div className="min-w-0">
             <h1 className="text-xl sm:text-3xl font-bold text-[#daaa00] truncate">{title}</h1>
             <p className="text-gray-400 text-xs sm:text-sm mt-0.5 truncate">{subtitle}</p>
           </div>
-        </a>
+        </Link>
         <div className="inline-flex shrink-0 rounded-lg border-2 border-[#daaa00] overflow-hidden text-xs sm:text-sm font-bold">
           <button
             type="button"
@@ -127,8 +130,19 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
       </div>
 
       {/* Row 2: Social links + Nav buttons */}
-      {(social || action) ? (
+      {(social || action || myPlayer) ? (
         <div className="flex flex-wrap items-center gap-2 mb-4">
+          {myPlayer ? (
+            <Link
+              to={`/player?${new URLSearchParams({
+                playerNumber: myPlayer.playerNumber,
+                playerName: myPlayer.playerName,
+              }).toString()}`}
+              className="px-4 py-2 rounded-lg border border-[#daaa00] bg-[#daaa00]/20 text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm font-semibold"
+            >
+              {t('nav.myStats')}
+            </Link>
+          ) : null}
           {social}
           {action}
         </div>

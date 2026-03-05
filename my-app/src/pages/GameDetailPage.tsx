@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Calculator } from 'lucide-react';
+import { StatTooltip } from '../components/StatTooltip.tsx';
+import { TableSkeleton } from '../components/TableSkeleton.tsx';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
@@ -56,19 +59,12 @@ type GamePitchingRow = {
 const formatValue = (value?: number | string | null) =>
   value === null || value === undefined || value === '' ? '-' : value;
 
-const formatDate = (value?: string | null) => {
-  if (!value) {
-    return '-';
-  }
+const formatDate = (value?: string | null, locale?: string) => {
+  if (!value) return '-';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-  });
+  if (Number.isNaN(date.getTime())) return value;
+  const loc = locale === 'ko' ? 'ko-KR' : 'en-US';
+  return date.toLocaleDateString(loc, { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
 const formatScore = (score?: number | null, oppScore?: number | null) => {
@@ -82,15 +78,16 @@ const formatScore = (score?: number | null, oppScore?: number | null) => {
 };
 
 export default function GameDetailPage() {
-  const { t } = useLanguage();
-  const params = new URLSearchParams(window.location.search);
-  const gameId = Number(params.get('gameId')) || 0;
+  const { t, lang } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const gameId = Number(searchParams.get('gameId')) || 0;
 
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
   const [battingStats, setBattingStats] = useState<GameBattingRow[]>([]);
   const [pitchingStats, setPitchingStats] = useState<GamePitchingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const loadGame = async () => {
@@ -147,7 +144,7 @@ export default function GameDetailPage() {
       { label: t('common.opponent'), value: formatValue(gameInfo?.opponent) },
       { label: t('common.season'), value: seasonLabel },
     ];
-  }, [gameInfo, t]);
+  }, [gameInfo, t, lang]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
@@ -160,21 +157,24 @@ export default function GameDetailPage() {
           action={(
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => {
-                  window.location.href = '/games';
-                }}
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-4 py-2 rounded-lg border border-gray-500 text-gray-400 hover:border-[#daaa00] hover:text-[#daaa00] transition"
+              >
+                {t('common.back')}
+              </button>
+              <Link
+                to="/games"
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 {t('common.gameRecords')}
-              </button>
-              <button
-                onClick={() => {
-                  window.location.href = '/';
-                }}
+              </Link>
+              <Link
+                to="/"
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 {t('common.home')}
-              </button>
+              </Link>
             </div>
           )}
         />
@@ -187,17 +187,26 @@ export default function GameDetailPage() {
           {!gameId ? (
             <div className="text-center text-gray-400">{t('gameDetail.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <TableSkeleton rows={10} cols={15} />
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : battingStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('gameDetail.noBatting')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[500px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.player')}</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">{t('common.player')}</th>
                     <th className="py-2 px-2">PA</th>
                     <th className="py-2 px-2">AB</th>
                     <th className="py-2 px-2">1B</th>
@@ -217,7 +226,7 @@ export default function GameDetailPage() {
                 <tbody>
                   {battingStats.map((record) => (
                     <tr key={`${record.jersey_number}-${record.first_name}-${record.last_name}`} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">
                         #{record.jersey_number} {record.first_name} {record.last_name}
                       </td>
                       <td className="py-2 px-2 text-center">{formatValue(record.plate_appearances)}</td>
@@ -254,18 +263,27 @@ export default function GameDetailPage() {
           {!gameId ? (
             <div className="text-center text-gray-400">{t('gameDetail.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <TableSkeleton rows={8} cols={12} />
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : pitchingStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('gameDetail.noPitching')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[500px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.player')}</th>
-                    <th className="py-2 px-2">IP</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">{t('common.player')}</th>
+                    <th className="py-2 px-2"><StatTooltip statKey="IP">IP</StatTooltip></th>
                     <th className="py-2 px-2">W</th>
                     <th className="py-2 px-2">K</th>
                     <th className="py-2 px-2">R</th>
@@ -280,7 +298,7 @@ export default function GameDetailPage() {
                 <tbody>
                   {pitchingStats.map((record) => (
                     <tr key={`${record.jersey_number}-${record.first_name}-${record.last_name}`} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">
                         #{record.jersey_number} {record.first_name} {record.last_name}
                       </td>
                       <td className="py-2 px-2 text-center">{formatValue(record.innings_pitched)}</td>

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
+import { CardGridSkeleton } from '../components/TableSkeleton.tsx';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
@@ -34,28 +36,22 @@ type Season = {
 const formatValue = (value?: number | string | null) =>
   value === null || value === undefined || value === '' ? '-' : value;
 
-const formatDate = (value?: string | null) => {
-  if (!value) {
-    return '-';
-  }
+const formatDate = (value?: string | null, locale?: string) => {
+  if (!value) return '-';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-  });
+  if (Number.isNaN(date.getTime())) return value;
+  const loc = locale === 'ko' ? 'ko-KR' : 'en-US';
+  return date.toLocaleDateString(loc, { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
 export default function GameRecordsPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const loadSeasons = async () => {
@@ -120,14 +116,12 @@ export default function GameRecordsPage() {
             { label: t('roster.updated'), value: 'Live' },
           ]}
           action={(
-            <button
-              onClick={() => {
-                window.location.href = '/';
-              }}
+            <Link
+              to="/"
               className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
             >
               {t('common.home')}
-            </button>
+            </Link>
           )}
         />
 
@@ -158,25 +152,31 @@ export default function GameRecordsPage() {
           </div>
 
           {loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <CardGridSkeleton count={6} />
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : records.length === 0 ? (
             <div className="text-center text-gray-400">{t('games.noRecords')}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {records.map((record) => (
-                <button
+                <Link
                   key={record.game_id}
-                  type="button"
-                  onClick={() => {
-                    window.location.href = `/game?gameId=${record.game_id}`;
-                  }}
-                  className="text-left rounded-xl border border-gray-700 bg-gray-800/80 p-5 text-white shadow transition hover:border-[#daaa00]"
+                  to={`/game?gameId=${record.game_id}`}
+                  className="text-left rounded-xl border border-gray-700 bg-gray-800/80 p-5 text-white shadow transition hover:border-[#daaa00] block"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">{formatDate(record.game_date)}</p>
+                      <p className="text-sm text-gray-400">{formatDate(record.game_date, lang)}</p>
                       <h3 className="text-lg font-semibold text-white">vs {formatValue(record.opponent)}</h3>
                       <p className="text-sm text-gray-400">
                         {record.is_friendly ? t('games.friendly') : t('games.regular')}
@@ -189,7 +189,7 @@ export default function GameRecordsPage() {
                   <div className="mt-4 text-sm text-gray-300">
                     {t('games.score')}: {formatValue(record.score)} - {formatValue(record.opp_score)}
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
           )}

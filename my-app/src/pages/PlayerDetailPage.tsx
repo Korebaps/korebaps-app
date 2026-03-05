@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator } from 'lucide-react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Calculator, Share2 } from 'lucide-react';
 import Header from '../components/Header';
+import { TableSkeleton } from '../components/TableSkeleton.tsx';
+import { useMyPlayer } from '../hooks/useMyPlayer.ts';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../apiBaseUrl';
@@ -112,11 +115,13 @@ const formatValue = (value?: number | string | null) =>
   value === null || value === undefined || value === '' ? '-' : value;
 
 export default function PlayerDetailPage() {
-  const { t } = useLanguage();
-  const params = new URLSearchParams(window.location.search);
-  const playerNumber = params.get('playerNumber') ?? '';
-  const playerName = params.get('playerName') ?? '';
-  const seasonIdParam = Number(params.get('seasonId')) || null;
+  const { t, lang } = useLanguage();
+  const navigate = useNavigate();
+  const { pinPlayer, unpinPlayer, isPinned } = useMyPlayer();
+  const [searchParams] = useSearchParams();
+  const playerNumber = searchParams.get('playerNumber') ?? '';
+  const playerName = searchParams.get('playerName') ?? '';
+  const seasonIdParam = Number(searchParams.get('seasonId')) || null;
 
   const [gameStats, setGameStats] = useState<PlayerGameBattingRow[]>([]);
   const [pitchingStats, setPitchingStats] = useState<PlayerGamePitchingRow[]>([]);
@@ -129,10 +134,21 @@ export default function PlayerDetailPage() {
   const [walkupArtUrl, setWalkupArtUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const nameParts = playerName.trim().split(' ').filter(Boolean);
   const firstName = nameParts[0] ?? '';
   const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
+  useEffect(() => {
+    if (playerName) {
+      document.title = `${playerName} - Korebaps Stats`;
+    }
+    return () => {
+      document.title = 'Korebaps Stats';
+    };
+  }, [playerName]);
 
   useEffect(() => {
     const loadSummary = async () => {
@@ -197,7 +213,7 @@ export default function PlayerDetailPage() {
     };
 
     loadSummary();
-  }, [firstName, lastName, playerName, playerNumber]);
+  }, [firstName, lastName, playerName, playerNumber, retryCount]);
 
   useEffect(() => {
     const loadCareerStats = async () => {
@@ -293,7 +309,36 @@ export default function PlayerDetailPage() {
     };
 
     loadGameStats();
-  }, [firstName, lastName, playerName, playerNumber, selectedSeasonId]);
+  }, [firstName, lastName, playerName, playerNumber, selectedSeasonId, retryCount]);
+
+  const shareUrl = useMemo(() => {
+    const params = new URLSearchParams({ playerNumber, playerName });
+    if (selectedSeasonId) params.set('seasonId', String(selectedSeasonId));
+    return `${window.location.origin}/player?${params.toString()}`;
+  }, [playerNumber, playerName, selectedSeasonId]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${playerName} - Korebaps Stats`,
+      text: `Check out ${playerName}'s stats on Korebaps`,
+      url: shareUrl,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') {
+          await navigator.clipboard?.writeText(shareUrl);
+          setShareCopied(true);
+          setTimeout(() => setShareCopied(false), 2000);
+        }
+      }
+    } else {
+      await navigator.clipboard?.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   const selectedSeasonLabel = useMemo(() => {
     if (!selectedSeasonId) {
@@ -318,21 +363,53 @@ export default function PlayerDetailPage() {
           action={(
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => {
-                  window.location.href = '/roster';
-                }}
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-4 py-2 rounded-lg border border-gray-500 text-gray-400 hover:border-[#daaa00] hover:text-[#daaa00] transition"
+              >
+                {t('common.back')}
+              </button>
+              {playerNumber && playerName && (
+                isPinned(playerNumber, playerName) ? (
+                  <button
+                    type="button"
+                    onClick={() => unpinPlayer()}
+                    className="px-4 py-2 rounded-lg border border-gray-500 text-gray-400 hover:border-[#daaa00] hover:text-[#daaa00] transition"
+                  >
+                    {t('player.unpinStats')}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => pinPlayer(playerNumber, playerName)}
+                    className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+                  >
+                    {t('player.pinStats')}
+                  </button>
+                )
+              )}
+              <Link
+                to="/roster"
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 {t('common.activeRoster')}
-              </button>
-              <button
-                onClick={() => {
-                  window.location.href = '/';
-                }}
+              </Link>
+              <Link
+                to="/"
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 {t('common.home')}
-              </button>
+              </Link>
+              {playerNumber && playerName && (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition flex items-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  {shareCopied ? t('player.shareCopied') : t('player.share')}
+                </button>
+              )}
             </div>
           )}
         />
@@ -426,9 +503,25 @@ export default function PlayerDetailPage() {
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-3 bg-gray-700 rounded w-8 mb-2" />
+                  <div className="h-6 bg-gray-700 rounded w-12" />
+                </div>
+              ))}
+            </div>
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : !careerBatting ? (
             <div className="text-center text-gray-400">{t('player.noBattingStats')}</div>
           ) : (
@@ -496,9 +589,25 @@ export default function PlayerDetailPage() {
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-3 bg-gray-700 rounded w-8 mb-2" />
+                  <div className="h-6 bg-gray-700 rounded w-12" />
+                </div>
+              ))}
+            </div>
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : !careerPitching ? (
             <div className="text-center text-gray-400">{t('player.noPitchingStats')}</div>
           ) : (
@@ -551,12 +660,12 @@ export default function PlayerDetailPage() {
           ) : gameStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[600px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
-                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left sticky left-[5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.opponent')}</th>
                     <th className="py-2 px-2">{t('common.score')}</th>
                     <th className="py-2 px-2">PA</th>
                     <th className="py-2 px-2">AB</th>
@@ -577,8 +686,8 @@ export default function PlayerDetailPage() {
                 <tbody>
                   {gameStats.map((record) => (
                     <tr key={record.game_id} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">{new Date(record.game_date).toLocaleDateString()}</td>
-                      <td className="py-2 px-2 text-left font-semibold">{record.opponent}</td>
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{new Date(record.game_date).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US')}</td>
+                      <td className="py-2 px-2 text-left font-semibold sticky left-[5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{record.opponent}</td>
                       <td className="py-2 px-2 text-center">
                         {formatScore(record.score, record.opp_score)}
                       </td>
@@ -616,18 +725,27 @@ export default function PlayerDetailPage() {
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>
           ) : loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <TableSkeleton rows={5} cols={13} />
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : pitchingStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[600px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
-                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left sticky left-[5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.opponent')}</th>
                     <th className="py-2 px-2">{t('common.score')}</th>
                     <th className="py-2 px-2">IP</th>
                     <th className="py-2 px-2">W</th>
@@ -644,10 +762,10 @@ export default function PlayerDetailPage() {
                 <tbody>
                   {pitchingStats.map((record) => (
                     <tr key={record.game_id} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
-                        {new Date(record.game_date).toLocaleDateString()}
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">
+                        {new Date(record.game_date).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US')}
                       </td>
-                      <td className="py-2 px-2 text-left font-semibold">{record.opponent}</td>
+                      <td className="py-2 px-2 text-left font-semibold sticky left-[5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{record.opponent}</td>
                       <td className="py-2 px-2 text-center">
                         {formatScore(record.score, record.opp_score)}
                       </td>

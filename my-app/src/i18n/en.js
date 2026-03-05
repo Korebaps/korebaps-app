@@ -15,6 +15,7 @@ const en = {
   // Common
   'common.loading': 'Loading...',
   'common.home': 'Home',
+  'common.back': 'Back',
   'common.activeRoster': 'Active Roster',
   'common.gameRecords': 'Game Records',
   'common.videos': 'Videos',
@@ -31,6 +32,16 @@ const en = {
   'common.status': 'Status',
   'common.close': 'Close',
   'common.refresh': 'Refresh',
+  'common.retry': 'Retry',
+  'nav.home': 'Home',
+  'nav.roster': 'Roster',
+  'nav.games': 'Games',
+  'nav.videos': 'Videos',
+  'nav.myStats': 'My Stats',
+  'player.pinStats': 'Pin as My Stats',
+  'player.unpinStats': 'Unpin',
+  'player.share': 'Share',
+  'player.shareCopied': 'Link copied!',
   'suffix.players': '',
   'suffix.games': ' games',
 
@@ -42,6 +53,7 @@ const en = {
   'app.seasonSelect': 'Select Season',
   'app.loadingSeasons': 'Loading seasons...',
   'app.includeRetired': 'Include Retired',
+  'app.searchPlayer': 'Search player...',
   'app.battingStats': 'Batting Stats',
   'app.pitchingStats': 'Pitching Stats',
   'app.runsAllowed': 'RA',
@@ -117,6 +129,19 @@ const en = {
   'videos.tryLater': 'Please try again later.',
   'videos.visitChannel': 'Visit our YouTube channel for more videos!',
   'videos.viewAllYouTube': 'View All on YouTube',
+
+  // Stat tooltips
+  'stats.PA': 'PA = Plate Appearances (total times at bat including walks, HBP)',
+  'stats.AB': 'AB = At Bats (official at bats, excludes walks, HBP, sacrifices)',
+  'stats.AVG': 'AVG = Batting Average (Hits / At Bats)',
+  'stats.OBP': 'OBP = On-Base Percentage ((H + BB + HBP) / PA)',
+  'stats.SLG': 'SLG = Slugging Percentage (Total Bases / At Bats)',
+  'stats.OPS': 'OPS = On-base Plus Slugging (OBP + SLG)',
+  'stats.WAR': 'WAR = Wins Above Replacement (estimated player value)',
+  'stats.ERA': 'ERA = Earned Run Average (ERA × 9 / IP)',
+  'stats.WHIP': 'WHIP = Walks + Hits per Inning Pitched',
+  'stats.IP': 'IP = Innings Pitched',
+  'stats.G': 'G = Games Played',
 
   // Point Table
   'points.heading': 'Point Table',

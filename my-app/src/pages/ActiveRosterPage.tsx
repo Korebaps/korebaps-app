@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
+import { CardGridSkeleton } from '../components/TableSkeleton.tsx';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
@@ -19,8 +21,17 @@ export default function ActiveRosterPage() {
   const { t } = useLanguage();
   const [players, setPlayers] = useState<ActivePlayer[]>([]);
   const [inactivePlayers, setInactivePlayers] = useState<ActivePlayer[]>([]);
+  const [seasons, setSeasons] = useState<{ id: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/seasons`)
+      .then((r) => r.json())
+      .then((data) => setSeasons(Array.isArray(data) ? data : []))
+      .catch(() => setSeasons([]));
+  }, []);
 
   useEffect(() => {
     const loadPlayers = async () => {
@@ -68,14 +79,12 @@ export default function ActiveRosterPage() {
             { label: t('common.status'), value: 'Active' },
           ]}
           action={(
-            <button
-              onClick={() => {
-                window.location.href = '/';
-              }}
+            <Link
+              to="/"
               className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
             >
               {t('common.home')}
-            </button>
+            </Link>
           )}
         />
 
@@ -86,25 +95,31 @@ export default function ActiveRosterPage() {
           </div>
 
           {loading ? (
-            <div className="text-center text-gray-400">{t('common.loading')}</div>
+            <CardGridSkeleton count={12} />
           ) : error ? (
-            <div className="text-center text-red-500">{error}</div>
+            <div className="text-center py-4">
+              <p className="text-red-500 mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           ) : players.length === 0 ? (
             <div className="text-center text-gray-400">{t('roster.noActive')}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {players.map((player) => (
-                <button
+                <Link
                   key={player.id}
-                  type="button"
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      playerNumber: String(player.jerseyNumber),
-                      playerName: `${player.firstName} ${player.lastName}`.trim(),
-                    });
-                    window.location.href = `/player?${params.toString()}`;
-                  }}
-                  className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-[#daaa00]"
+                  to={`/player?${new URLSearchParams({
+                    playerNumber: String(player.jerseyNumber),
+                    playerName: `${player.firstName} ${player.lastName}`.trim(),
+                    ...(seasons[0] && { seasonId: String(seasons[0].id) }),
+                  }).toString()}`}
+                  className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-[#daaa00] block"
                 >
                   <span className="absolute left-3 top-3 text-base font-bold text-[#daaa00]">#{player.jerseyNumber}</span>
                   <div className="flex items-center justify-between">
@@ -113,7 +128,7 @@ export default function ActiveRosterPage() {
                     </div>
                     <span className="text-xs text-[#daaa00]">Active</span>
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
           )}
@@ -133,23 +148,29 @@ export default function ActiveRosterPage() {
               {loading ? (
                 <div className="text-center text-gray-400">{t('common.loading')}</div>
               ) : error ? (
-                <div className="text-center text-red-500">{error}</div>
+                <div className="text-center py-4">
+                  <p className="text-red-500 mb-3">{error}</p>
+                  <button
+                    type="button"
+                    onClick={() => { setError(null); setRetryCount((c) => c + 1); }}
+                    className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
+                  >
+                    {t('common.retry')}
+                  </button>
+                </div>
               ) : inactivePlayers.length === 0 ? (
                 <div className="text-center text-gray-400">{t('roster.noInactive')}</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {inactivePlayers.map((player) => (
-                    <button
+                    <Link
                       key={player.id}
-                      type="button"
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          playerNumber: String(player.jerseyNumber),
-                          playerName: `${player.firstName} ${player.lastName}`.trim(),
-                        });
-                        window.location.href = `/player?${params.toString()}`;
-                      }}
-                      className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-gray-300"
+                      to={`/player?${new URLSearchParams({
+                        playerNumber: String(player.jerseyNumber),
+                        playerName: `${player.firstName} ${player.lastName}`.trim(),
+                        ...(seasons[0] && { seasonId: String(seasons[0].id) }),
+                      }).toString()}`}
+                      className="relative w-full text-left rounded-xl border border-gray-700 bg-gray-800/80 p-4 pt-7 text-white shadow transition hover:border-gray-300 block"
                     >
                       <span className="absolute left-3 top-3 text-base font-bold text-gray-300">#{player.jerseyNumber}</span>
                       <div className="flex items-center justify-between">
@@ -158,7 +179,7 @@ export default function ActiveRosterPage() {
                         </div>
                         <span className="text-xs text-gray-300">Inactive</span>
                       </div>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               )}

@@ -1,47 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
-import PlayerDetailPage from './pages/PlayerDetailPage.tsx';
-import AdminDashboard from './admin.tsx';
-import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
-import GameRecordsPage from './pages/GameRecordsPage.tsx';
-import GameDetailPage from './pages/GameDetailPage.tsx';
-import Videos from './Videos.tsx';
-import { LanguageProvider } from './i18n/LanguageContext';
+import AppRouter from './AppRouter.tsx';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-const pathname = window.location.pathname;
-const isPlayerPage = pathname.startsWith('/player');
-const isAdminPage = pathname.startsWith('/admin');
-const isRosterPage = pathname.startsWith('/roster');
-const isGamesPage = pathname.startsWith('/games');
-const isGameDetailPage = pathname.startsWith('/game');
-const isMediaPage = pathname.startsWith('/media');
-const RootComponent = isPlayerPage
-  ? PlayerDetailPage
-  : isAdminPage
-    ? AdminDashboard
-    : isRosterPage
-      ? ActiveRosterPage
-      : isGamesPage
-        ? GameRecordsPage
-        : isGameDetailPage
-          ? GameDetailPage
-          : isMediaPage
-            ? Videos
-            : App;
-
 root.render(
   <React.StrictMode>
-    {isAdminPage ? (
-      <AdminDashboard />
-    ) : (
-      <LanguageProvider>
-        <RootComponent />
-      </LanguageProvider>
-    )}
+    <AppRouter />
   </React.StrictMode>
 );
 
