@@ -61,7 +61,7 @@ function computeCumulativePoints(gameStats: Props['gameStats']): GamePoint[] {
     const avg = ab > 0 ? Math.round((h / ab) * 1000) / 1000 : 0;
     const obp = pa > 0 ? Math.round(((h + bb + hbp) / pa) * 1000) / 1000 : 0;
     const slg = ab > 0 ? Math.round((tb / ab) * 1000) / 1000 : 0;
-    const ops = avg + obp + slg;
+    const ops = obp + slg; // OPS = OBP + SLG (not AVG + OBP + SLG)
 
     points.push({
       game: i + 1,
