@@ -31,7 +31,7 @@ function markRecorded() {
   try { localStorage.setItem(THROTTLE_KEY, String(Date.now())); } catch (e) { /* */ }
 }
 
-export default function Header({ logoSrc, title, subtitle, stats, action }) {
+export default function Header({ logoSrc, title, subtitle, stats, action, social }) {
   var ctx = useLanguage();
   var lang = ctx.lang;
   var setLang = ctx.setLang;
@@ -98,45 +98,55 @@ export default function Header({ logoSrc, title, subtitle, stats, action }) {
   }
 
   return (
-    <div className="bg-gradient-to-r from-black to-gray-900 rounded-2xl shadow-2xl p-6 mb-6 border-2 border-[#daaa00] overflow-x-hidden">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <a href="/" className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition">
-          <img src={logoSrc} alt={t('header.logoAlt')} className="w-16 h-16 object-contain" />
-          <div>
-            <h1 className="text-3xl font-bold text-[#daaa00]">{title}</h1>
-            <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+    <div className="bg-gradient-to-r from-black to-gray-900 rounded-2xl shadow-2xl p-4 sm:p-6 mb-6 border-2 border-[#daaa00]">
+      {/* Row 1: Logo + Title | Language toggle */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <a href="/" className="flex items-center gap-3 min-w-0 cursor-pointer hover:opacity-80 transition">
+          <img src={logoSrc} alt={t('header.logoAlt')} className="w-12 h-12 sm:w-16 sm:h-16 object-contain shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-[#daaa00] truncate">{title}</h1>
+            <p className="text-gray-400 text-xs sm:text-sm mt-0.5 truncate">{subtitle}</p>
           </div>
         </a>
-        <div className="flex items-center gap-3 w-full md:w-auto max-w-full overflow-x-auto">
-          <div className="inline-flex shrink-0 rounded-lg border-2 border-[#daaa00] overflow-hidden text-sm font-bold">
-            <button
-              type="button"
-              onClick={function () { setLang('en'); }}
-              className={'px-4 py-2 transition ' + (lang === 'en' ? 'bg-[#daaa00] text-black' : 'bg-transparent text-[#daaa00] hover:bg-[#daaa00]/20')}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={function () { setLang('ko'); }}
-              className={'px-4 py-2 transition ' + (lang === 'ko' ? 'bg-[#daaa00] text-black' : 'bg-transparent text-[#daaa00] hover:bg-[#daaa00]/20')}
-            >
-              KO
-            </button>
-          </div>
-          {action ? <div className="flex-1 min-w-0 overflow-x-auto">{action}</div> : null}
+        <div className="inline-flex shrink-0 rounded-lg border-2 border-[#daaa00] overflow-hidden text-xs sm:text-sm font-bold">
+          <button
+            type="button"
+            onClick={function () { setLang('en'); }}
+            className={'px-3 py-1.5 sm:px-4 sm:py-2 transition ' + (lang === 'en' ? 'bg-[#daaa00] text-black' : 'bg-transparent text-[#daaa00] hover:bg-[#daaa00]/20')}
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            onClick={function () { setLang('ko'); }}
+            className={'px-3 py-1.5 sm:px-4 sm:py-2 transition ' + (lang === 'ko' ? 'bg-[#daaa00] text-black' : 'bg-transparent text-[#daaa00] hover:bg-[#daaa00]/20')}
+          >
+            KO
+          </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      {/* Row 2: Social links + Nav buttons */}
+      {(social || action) ? (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {social}
+          {action}
+        </div>
+      ) : null}
+
+      {/* Row 3: Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {stats.map(function (stat) {
           return (
-            <div key={stat.label} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <div key={stat.label} className="bg-gray-800 border border-gray-700 rounded-xl p-3 sm:p-4">
               <p className="text-xs text-gray-400">{stat.label}</p>
-              <p className="text-xl font-bold text-white">{stat.value}</p>
+              <p className="text-lg sm:text-xl font-bold text-white">{stat.value}</p>
             </div>
           );
         })}
       </div>
+
+      {/* Row 4: Visitor counter */}
       {visitorRow}
     </div>
   );
