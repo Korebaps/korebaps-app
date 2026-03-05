@@ -35,6 +35,9 @@ type Props = {
 };
 
 function computeCumulativePoints(gameStats: Props['gameStats']): GamePoint[] {
+  const sorted = [...gameStats].sort(
+    (a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime(),
+  );
   let pa = 0;
   let ab = 0;
   let h = 0;
@@ -43,7 +46,7 @@ function computeCumulativePoints(gameStats: Props['gameStats']): GamePoint[] {
   let tb = 0;
   const points: GamePoint[] = [];
 
-  gameStats.forEach((g, i) => {
+  sorted.forEach((g, i) => {
     pa += g.plate_appearances ?? 0;
     ab += g.at_bats ?? 0;
     const singles = g.singles ?? 0;
