@@ -1,22 +1,27 @@
 import { useLanguage } from '../i18n/LanguageContext';
 
+// Aligned with server point calculation (server/index.js)
 const battingRows = [
   { label: '1B', points: '+1' },
   { label: '2B', points: '+2' },
   { label: '3B', points: '+3' },
   { label: 'HR', points: '+5' },
-  { label: 'R/RBI', points: '+1' },
+  { label: 'R', points: '+1' },
+  { label: 'RBI', points: '+1' },
   { label: 'BB/HBP', points: '+0.5' },
   { label: 'SB', points: '+1' },
   { label: 'MVP', points: '+5' },
 ];
 
 const pitchingRows = [
-  { label: 'IP', points: '+1' },
-  { label: 'Win', points: '+10' },
-  { label: 'K', points: '+2' },
-  { label: 'ER', points: '-0.5' },
-  { label: 'SV', points: '+3' },
+  { label: 'IP', points: '+3 per inning' },
+  { label: 'Win', points: '+5' },
+  { label: 'K', points: '+1' },
+  { label: 'RA', points: '-2' },
+  { label: 'ER', points: '-1' },
+  { label: 'BB', points: '-1' },
+  { label: 'H', points: '-1' },
+  { label: 'MVP', points: '+5' },
 ];
 
 export function PointTable() {

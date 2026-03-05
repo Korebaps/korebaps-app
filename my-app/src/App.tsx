@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { PointTable } from './components/PointTable';
+import TopPlayersChart from './components/TopPlayersChart.tsx';
 import { StatTooltip } from './components/StatTooltip.tsx';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -418,14 +419,30 @@ function MainDashboard() {
   [pitchingRecords]);
 
   const filteredBattingRows = useMemo(() => {
-    if (showInactivePlayers) return battingRows;
-    return battingRows.filter(row => row.isActive);
-  }, [battingRows, showInactivePlayers]);
+    let rows = showInactivePlayers ? battingRows : battingRows.filter(row => row.isActive);
+    const q = playerSearchQuery.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(
+        (r) =>
+          r.playerName.toLowerCase().includes(q) ||
+          String(r.playerNumber).toLowerCase().includes(q),
+      );
+    }
+    return rows;
+  }, [battingRows, showInactivePlayers, playerSearchQuery]);
 
   const filteredPitchingRows = useMemo(() => {
-    if (showInactivePlayers) return pitchingRows;
-    return pitchingRows.filter(row => row.isActive);
-  }, [pitchingRows, showInactivePlayers]);
+    let rows = showInactivePlayers ? pitchingRows : pitchingRows.filter(row => row.isActive);
+    const q = playerSearchQuery.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(
+        (r) =>
+          r.playerName.toLowerCase().includes(q) ||
+          String(r.playerNumber).toLowerCase().includes(q),
+      );
+    }
+    return rows;
+  }, [pitchingRows, showInactivePlayers, playerSearchQuery]);
 
   const sortedBattingRecords = useMemo(() => {
     if (!battingSort) return filteredBattingRows;
@@ -1012,6 +1029,13 @@ function MainDashboard() {
             </div>
             )}
           </section>
+
+          {!battingLoading && !pitchingLoading && !battingError && !pitchingError && (
+            <TopPlayersChart
+              battingRecords={sortedBattingRecords}
+              pitchingRecords={sortedPitchingRecords}
+            />
+          )}
         </div>
 
         <PointTable />

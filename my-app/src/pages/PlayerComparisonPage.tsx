@@ -18,6 +18,12 @@ type CareerBattingStats = {
   pa: number;
   ab: number;
   h: number;
+  r?: number;
+  rbi?: number;
+  hr?: number;
+  sb?: number;
+  bb?: number;
+  so?: number;
   avg: number;
   obp: number;
   slg: number;
@@ -28,8 +34,13 @@ type CareerPitchingStats = {
   g: number;
   w: number;
   ip: string | number;
+  so?: number;
+  bb?: number;
+  h?: number;
+  er?: number;
   era: number;
   whip: number;
+  k_9?: number;
 } | null;
 
 const formatValue = (value?: number | string | null) =>
@@ -221,6 +232,8 @@ export default function PlayerComparisonPage() {
                               <div className="text-xs text-gray-400 mb-1">{t('compare.batting')}</div>
                               <div className="grid grid-cols-2 gap-2">
                                 <span>G / PA / AB:</span><span>{formatValue(battingA.games)} / {formatValue(battingA.pa)} / {formatValue(battingA.ab)}</span>
+                                <span>H / R / RBI:</span><span>{formatValue(battingA.h)} / {formatValue(battingA.r)} / {formatValue(battingA.rbi)}</span>
+                                <span>HR / SB / BB / SO:</span><span>{formatValue(battingA.hr)} / {formatValue(battingA.sb)} / {formatValue(battingA.bb)} / {formatValue(battingA.so)}</span>
                                 <span>AVG / OBP / SLG:</span><span>{formatValue(battingA.avg)} / {formatValue(battingA.obp)} / {formatValue(battingA.slg)}</span>
                                 <span>OPS:</span><span>{formatValue(battingA.ops)}</span>
                               </div>
@@ -231,7 +244,8 @@ export default function PlayerComparisonPage() {
                               <div className="text-xs text-gray-400 mb-1">{t('compare.pitching')}</div>
                               <div className="grid grid-cols-2 gap-2">
                                 <span>G / IP / W:</span><span>{formatValue(pitchingA.g)} / {formatValue(pitchingA.ip)} / {formatValue(pitchingA.w)}</span>
-                                <span>ERA / WHIP:</span><span>{formatValue(pitchingA.era)} / {formatValue(pitchingA.whip)}</span>
+                                <span>SO / BB / H / ER:</span><span>{formatValue(pitchingA.so)} / {formatValue(pitchingA.bb)} / {formatValue(pitchingA.h)} / {formatValue(pitchingA.er)}</span>
+                                <span>ERA / WHIP / K/9:</span><span>{formatValue(pitchingA.era)} / {formatValue(pitchingA.whip)} / {formatValue(pitchingA.k_9)}</span>
                               </div>
                             </div>
                           )}
@@ -252,6 +266,8 @@ export default function PlayerComparisonPage() {
                               <div className="text-xs text-gray-400 mb-1">{t('compare.batting')}</div>
                               <div className="grid grid-cols-2 gap-2">
                                 <span>G / PA / AB:</span><span>{formatValue(battingB.games)} / {formatValue(battingB.pa)} / {formatValue(battingB.ab)}</span>
+                                <span>H / R / RBI:</span><span>{formatValue(battingB.h)} / {formatValue(battingB.r)} / {formatValue(battingB.rbi)}</span>
+                                <span>HR / SB / BB / SO:</span><span>{formatValue(battingB.hr)} / {formatValue(battingB.sb)} / {formatValue(battingB.bb)} / {formatValue(battingB.so)}</span>
                                 <span>AVG / OBP / SLG:</span><span>{formatValue(battingB.avg)} / {formatValue(battingB.obp)} / {formatValue(battingB.slg)}</span>
                                 <span>OPS:</span><span>{formatValue(battingB.ops)}</span>
                               </div>
@@ -262,7 +278,8 @@ export default function PlayerComparisonPage() {
                               <div className="text-xs text-gray-400 mb-1">{t('compare.pitching')}</div>
                               <div className="grid grid-cols-2 gap-2">
                                 <span>G / IP / W:</span><span>{formatValue(pitchingB.g)} / {formatValue(pitchingB.ip)} / {formatValue(pitchingB.w)}</span>
-                                <span>ERA / WHIP:</span><span>{formatValue(pitchingB.era)} / {formatValue(pitchingB.whip)}</span>
+                                <span>SO / BB / H / ER:</span><span>{formatValue(pitchingB.so)} / {formatValue(pitchingB.bb)} / {formatValue(pitchingB.h)} / {formatValue(pitchingB.er)}</span>
+                                <span>ERA / WHIP / K/9:</span><span>{formatValue(pitchingB.era)} / {formatValue(pitchingB.whip)} / {formatValue(pitchingB.k_9)}</span>
                               </div>
                             </div>
                           )}

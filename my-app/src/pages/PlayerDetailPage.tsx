@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator, Pin, PinOff } from 'lucide-react';
+import { Calculator, Pin, PinOff, Share2 } from 'lucide-react';
 import Header from '../components/Header';
 import { StatTooltip } from '../components/StatTooltip.tsx';
+import PlayerBattingTrendChart from '../components/PlayerBattingTrendChart.tsx';
 import { useMyPlayer } from '../hooks/useMyPlayer.ts';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
@@ -139,8 +140,19 @@ export default function PlayerDetailPage() {
   const [comparePitchingA, setComparePitchingA] = useState<CareerPitchingStats | null>(null);
   const [comparePitchingB, setComparePitchingB] = useState<CareerPitchingStats | null>(null);
   const [compareLoading, setCompareLoading] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const nameParts = playerName.trim().split(' ').filter(Boolean);
+
+  const handleShare = () => {
+    const params = new URLSearchParams({ playerNumber, playerName });
+    if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
   const firstName = nameParts[0] ?? '';
   const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
 
@@ -398,6 +410,16 @@ export default function PlayerDetailPage() {
               >
                 {t('common.home')}
               </button>
+              {playerNumber && playerName && (
+                <button
+                  onClick={handleShare}
+                  className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition flex items-center gap-2"
+                  title={t('player.shareLink')}
+                >
+                  <Share2 className="w-4 h-4" />
+                  {shareCopied ? t('player.linkCopied') : t('player.shareLink')}
+                </button>
+              )}
             </div>
           )}
         />
@@ -692,6 +714,13 @@ export default function PlayerDetailPage() {
           ) : gameStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
+            <>
+            {gameStats.length >= 2 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-[#daaa00] mb-2">{t('player.battingTrend')}</h3>
+                <PlayerBattingTrendChart gameStats={gameStats} />
+              </div>
+            )}
             <div className="overflow-x-auto -mx-2 md:mx-0">
               <table className="w-full text-sm text-white border-collapse min-w-[600px]">
                 <thead className="text-xs text-gray-300">
@@ -746,6 +775,7 @@ export default function PlayerDetailPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
 
