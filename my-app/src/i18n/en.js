@@ -31,6 +31,7 @@ const en = {
   'common.status': 'Status',
   'common.close': 'Close',
   'common.refresh': 'Refresh',
+  'common.exportCSV': 'Export CSV',
   'common.myStats': 'My Stats',
   'suffix.players': '',
   'suffix.games': ' games',

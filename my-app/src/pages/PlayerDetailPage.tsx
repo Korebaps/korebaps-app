@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator, Pin, PinOff, Share2 } from 'lucide-react';
+import { Calculator, Download, Pin, PinOff, Share2 } from 'lucide-react';
 import Header from '../components/Header';
 import { StatTooltip } from '../components/StatTooltip.tsx';
 import PlayerBattingTrendChart from '../components/PlayerBattingTrendChart.tsx';
@@ -113,6 +113,15 @@ const formatScore = (score?: number | null, oppScore?: number | null) => {
 
 const formatValue = (value?: number | string | null) =>
   value === null || value === undefined || value === '' ? '-' : value;
+
+const downloadCSV = (csv: string, filename: string) => {
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
 
 export default function PlayerDetailPage() {
   const { t } = useLanguage();
@@ -358,6 +367,106 @@ export default function PlayerDetailPage() {
     return seasons.find((season) => season.id === selectedSeasonId)?.label ?? '-';
   }, [seasons, selectedSeasonId, t]);
 
+  const safeName = (playerName || playerNumber || 'player').replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+  const seasonSuffix = selectedSeasonLabel.replace(/\s/g, '_');
+
+  const handleExportCareerBatting = () => {
+    if (!careerBatting) return;
+    const headers = ['G', 'PA', 'AB', 'H', '2B', '3B', 'HR', 'R', 'RBI', 'BB', 'HBP', 'SO', 'SB', 'AVG', 'OBP', 'SLG', 'OPS'];
+    const row = [
+      careerBatting.games,
+      careerBatting.pa,
+      careerBatting.ab,
+      careerBatting.h,
+      careerBatting.doubles,
+      careerBatting.triples,
+      careerBatting.hr,
+      careerBatting.r,
+      careerBatting.rbi,
+      careerBatting.bb,
+      careerBatting.hbp,
+      careerBatting.so,
+      careerBatting.sb,
+      careerBatting.avg,
+      careerBatting.obp,
+      careerBatting.slg,
+      careerBatting.ops,
+    ];
+    const csv = headers.join(',') + '\n' + row.join(',') + '\n';
+    downloadCSV(csv, `${safeName}_career_batting_${seasonSuffix}.csv`);
+  };
+
+  const handleExportCareerPitching = () => {
+    if (!careerPitching) return;
+    const headers = ['G', 'W', 'IP', 'SO', 'BB', 'H', 'ER', 'ERA', 'WHIP', 'K/9'];
+    const row = [
+      careerPitching.g,
+      careerPitching.w,
+      careerPitching.ip,
+      careerPitching.so,
+      careerPitching.bb,
+      careerPitching.h,
+      careerPitching.er,
+      careerPitching.era,
+      careerPitching.whip,
+      careerPitching.k_9,
+    ];
+    const csv = headers.join(',') + '\n' + row.join(',') + '\n';
+    downloadCSV(csv, `${safeName}_career_pitching_${seasonSuffix}.csv`);
+  };
+
+  const handleExportGameBatting = () => {
+    const headers = ['Date', 'Opponent', 'Score', 'PA', 'AB', '1B', '2B', '3B', 'HR', 'R', 'RBI', 'BB', 'HBP', 'SO', 'SB', 'CS', 'Point'];
+    let csv = headers.join(',') + '\n';
+    gameStats.forEach((r) => {
+      const scoreStr = formatScore(r.score, r.opp_score) ?? '-';
+      csv += [
+        r.game_date,
+        `"${(r.opponent || '').replace(/"/g, '""')}"`,
+        scoreStr,
+        r.plate_appearances ?? '',
+        r.at_bats ?? '',
+        r.singles ?? '',
+        r.doubles ?? '',
+        r.triples ?? '',
+        r.home_runs ?? '',
+        r.runs_scored ?? '',
+        r.rbi ?? '',
+        r.walks ?? '',
+        r.hit_by_pitch ?? '',
+        r.strikeouts ?? '',
+        r.stolen_bases ?? '',
+        r.caught_stealing ?? '',
+        r.batting_points ?? '',
+      ].join(',') + '\n';
+    });
+    downloadCSV(csv, `${safeName}_game_batting_${seasonSuffix}.csv`);
+  };
+
+  const handleExportGamePitching = () => {
+    const headers = ['Date', 'Opponent', 'Score', 'IP', 'W', 'K', 'R', 'ER', 'H', 'BB', 'HBP', 'Pitches', 'Point'];
+    let csv = headers.join(',') + '\n';
+    pitchingStats.forEach((r) => {
+      const scoreStr = formatScore(r.score, r.opp_score) ?? '-';
+      csv += [
+        r.game_date,
+        `"${(r.opponent || '').replace(/"/g, '""')}"`,
+        scoreStr,
+        r.innings_pitched ?? '',
+        r.wins ?? '',
+        r.strikeouts ?? '',
+        r.runs_allowed ?? '',
+        r.earned_runs ?? '',
+        r.hits_allowed ?? '',
+        r.walks ?? '',
+        r.hit_by_pitch ?? '',
+        r.pitches_thrown ?? '',
+        r.pitching_points ?? '',
+      ].join(',') + '\n';
+    });
+    downloadCSV(csv, `${safeName}_game_pitching_${seasonSuffix}.csv`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -491,7 +600,18 @@ export default function PlayerDetailPage() {
               <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.careerBatting')}</h2>
               {!isActive && <span className="text-xs text-gray-400 ml-2">(Inactive)</span>}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <div className="flex items-center gap-2 flex-wrap">
+              {careerBatting && (
+                <button
+                  type="button"
+                  onClick={handleExportCareerBatting}
+                  className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  {t('common.exportCSV')}
+                </button>
+              )}
+              <div className="flex items-center gap-2 text-sm text-gray-300">
               <span>{t('common.selectSeason')}</span>
               <select
                 value={selectedSeasonId ?? ''}
@@ -508,6 +628,7 @@ export default function PlayerDetailPage() {
                   </option>
                 ))}
               </select>
+            </div>
             </div>
           </div>
           {!playerNumber || !playerName ? (
@@ -575,10 +696,22 @@ export default function PlayerDetailPage() {
         </section>
 
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-6 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.careerPitching')}</h2>
-            {!isActive && <span className="text-xs text-gray-400 ml-2">(Inactive)</span>}
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
+              <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.careerPitching')}</h2>
+              {!isActive && <span className="text-xs text-gray-400 ml-2">(Inactive)</span>}
+            </div>
+            {careerPitching && (
+              <button
+                type="button"
+                onClick={handleExportCareerPitching}
+                className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {t('common.exportCSV')}
+              </button>
+            )}
           </div>
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>
@@ -701,9 +834,21 @@ export default function PlayerDetailPage() {
         )}
 
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-8 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gameBattingStats')}</h2>
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
+              <h2 className={`text-xl font-bold tracking-wide ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gameBattingStats')}</h2>
+            </div>
+            {gameStats.length > 0 && (
+              <button
+                type="button"
+                onClick={handleExportGameBatting}
+                className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {t('common.exportCSV')}
+              </button>
+            )}
           </div>
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>
@@ -780,9 +925,21 @@ export default function PlayerDetailPage() {
         </section>
 
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-6 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
-            <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gamePitchingStats')}</h2>
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
+              <h2 className={`text-xl font-bold ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>{t('player.gamePitchingStats')}</h2>
+            </div>
+            {pitchingStats.length > 0 && (
+              <button
+                type="button"
+                onClick={handleExportGamePitching}
+                className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {t('common.exportCSV')}
+              </button>
+            )}
           </div>
           {!playerNumber || !playerName ? (
             <div className="text-center text-gray-400">{t('player.notFound')}</div>

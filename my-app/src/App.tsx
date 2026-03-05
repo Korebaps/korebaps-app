@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, Download } from 'lucide-react';
 import { PointTable } from './components/PointTable';
 import TopPlayersChart from './components/TopPlayersChart.tsx';
 import { StatTooltip } from './components/StatTooltip.tsx';
@@ -513,6 +513,74 @@ function MainDashboard() {
   const renderStatValue = (value?: number | string | null) =>
     value === null || value === undefined || value === '' ? '-' : value;
 
+  const downloadBattingCSV = () => {
+    const seasonLabel = selectedSeasonId ? seasons.find((s) => s.id === selectedSeasonId)?.label ?? 'All' : 'All';
+    const headers = ['#', 'Player', ...(selectedSeasonId ? ['G'] : []), 'PA', 'AB', '1B', '2B', '3B', 'HR', 'R', 'RBI', 'BB', 'HBP', 'SO', 'SB', 'AVG', 'OBP', 'SLG', 'OPS', ...(selectedSeasonId ? ['WAR'] : []), 'Score'];
+    let csv = headers.join(',') + '\n';
+    sortedBattingRecords.forEach((r) => {
+      const row = [
+        r.playerNumber,
+        `"${(r.playerName || '').replace(/"/g, '""')}"`,
+        ...(selectedSeasonId ? [r.gamesPlayed ?? ''] : []),
+        r.plateAppearances ?? '',
+        r.atBats ?? '',
+        r.singles ?? '',
+        r.doubles ?? '',
+        r.triples ?? '',
+        r.homeRuns ?? '',
+        r.runs ?? '',
+        r.rbi ?? '',
+        r.walks ?? '',
+        r.hitByPitch ?? '',
+        r.strikeouts ?? '',
+        r.stolenBases ?? '',
+        r.avg ?? '',
+        r.obp ?? '',
+        r.slg ?? '',
+        r.ops ?? '',
+        ...(selectedSeasonId ? [r.war ?? ''] : []),
+        r.score ?? '',
+      ];
+      csv += row.join(',') + '\n';
+    });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `batting_${seasonLabel.replace(/\s/g, '_')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const downloadPitchingCSV = () => {
+    const seasonLabel = selectedSeasonId ? seasons.find((s) => s.id === selectedSeasonId)?.label ?? 'All' : 'All';
+    const headers = ['#', 'Player', 'G', 'IP', 'W', 'K', 'RA', 'ER', 'H', 'BB', 'Pitches', 'ERA', 'WHIP', 'Score'];
+    let csv = headers.join(',') + '\n';
+    sortedPitchingRecords.forEach((r) => {
+      csv += [
+        r.playerNumber,
+        `"${(r.playerName || '').replace(/"/g, '""')}"`,
+        r.gamesPlayed ?? '',
+        r.inningsPitched ?? '',
+        r.wins ?? '',
+        r.strikeouts ?? '',
+        r.runsAllowed ?? '',
+        r.earnedRuns ?? '',
+        r.hitsAllowed ?? '',
+        r.walks ?? '',
+        r.pitchCount ?? '',
+        r.era ?? '',
+        r.whip ?? '',
+        r.score ?? '',
+      ].join(',') + '\n';
+    });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `pitching_${seasonLabel.replace(/\s/g, '_')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   const carouselImages = [
     '/carousel-1.JPG',
     '/carousel-2.jpg',
@@ -707,9 +775,21 @@ function MainDashboard() {
             </div>
           </section>
           <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator className="w-6 h-6 text-[#daaa00]" />
-              <h2 className="text-xl font-bold text-[#daaa00]">{t('app.battingStats')}</h2>
+            <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-6 h-6 text-[#daaa00]" />
+                <h2 className="text-xl font-bold text-[#daaa00]">{t('app.battingStats')}</h2>
+              </div>
+              {sortedBattingRecords.length > 0 && (
+                <button
+                  type="button"
+                  onClick={downloadBattingCSV}
+                  className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  {t('common.exportCSV')}
+                </button>
+              )}
             </div>
             {battingLoading ? (
               <div className="text-center text-gray-400">{t('common.loading')}</div>
@@ -893,9 +973,21 @@ function MainDashboard() {
           </section>
 
           <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator className="w-6 h-6 text-[#daaa00]" />
-              <h2 className="text-xl font-bold text-[#daaa00]">{t('app.pitchingStats')}</h2>
+            <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-6 h-6 text-[#daaa00]" />
+                <h2 className="text-xl font-bold text-[#daaa00]">{t('app.pitchingStats')}</h2>
+              </div>
+              {sortedPitchingRecords.length > 0 && (
+                <button
+                  type="button"
+                  onClick={downloadPitchingCSV}
+                  className="px-3 py-1.5 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  {t('common.exportCSV')}
+                </button>
+              )}
             </div>
             {pitchingLoading ? (
               <div className="text-center text-gray-400">{t('common.loading')}</div>

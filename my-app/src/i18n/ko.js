@@ -31,6 +31,7 @@ const ko = {
   'common.status': '상태',
   'common.close': '닫기',
   'common.refresh': '새로고침',
+  'common.exportCSV': 'CSV 내보내기',
   'common.myStats': '내 기록',
   'suffix.players': '명',
   'suffix.games': '경기',
