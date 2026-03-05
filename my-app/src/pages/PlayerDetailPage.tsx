@@ -115,6 +115,7 @@ const formatValue = (value?: number | string | null) =>
 
 export default function PlayerDetailPage() {
   const { t } = useLanguage();
+  const { isPinned, pinPlayer, unpinPlayer } = useMyPlayer();
   const params = new URLSearchParams(window.location.search);
   const playerNumber = params.get('playerNumber') ?? '';
   const playerName = params.get('playerName') ?? '';
