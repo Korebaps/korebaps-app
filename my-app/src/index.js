@@ -7,7 +7,9 @@ import AdminDashboard from './admin.tsx';
 import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
 import GameRecordsPage from './pages/GameRecordsPage.tsx';
 import GameDetailPage from './pages/GameDetailPage.tsx';
+import PlayerComparisonPage from './pages/PlayerComparisonPage.tsx';
 import Videos from './Videos.tsx';
+import MainLayout from './components/MainLayout.tsx';
 import { LanguageProvider } from './i18n/LanguageContext';
 import reportWebVitals from './reportWebVitals';
 
@@ -19,6 +21,7 @@ const isRosterPage = pathname.startsWith('/roster');
 const isGamesPage = pathname.startsWith('/games');
 const isGameDetailPage = pathname.startsWith('/game');
 const isMediaPage = pathname.startsWith('/media');
+const isComparePage = pathname.startsWith('/compare');
 const RootComponent = isPlayerPage
   ? PlayerDetailPage
   : isAdminPage
@@ -31,7 +34,9 @@ const RootComponent = isPlayerPage
           ? GameDetailPage
           : isMediaPage
             ? Videos
-            : App;
+            : isComparePage
+              ? PlayerComparisonPage
+              : App;
 
 root.render(
   <React.StrictMode>
@@ -39,7 +44,9 @@ root.render(
       <AdminDashboard />
     ) : (
       <LanguageProvider>
-        <RootComponent />
+        <MainLayout>
+          <RootComponent />
+        </MainLayout>
       </LanguageProvider>
     )}
   </React.StrictMode>

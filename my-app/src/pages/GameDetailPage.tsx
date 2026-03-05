@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import Header from '../components/Header';
+import { StatTooltip } from '../components/StatTooltip.tsx';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../apiBaseUrl';
@@ -193,31 +194,31 @@ export default function GameDetailPage() {
           ) : battingStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('gameDetail.noBatting')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[500px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.player')}</th>
-                    <th className="py-2 px-2">PA</th>
-                    <th className="py-2 px-2">AB</th>
-                    <th className="py-2 px-2">1B</th>
-                    <th className="py-2 px-2">2B</th>
-                    <th className="py-2 px-2">3B</th>
-                    <th className="py-2 px-2">HR</th>
-                    <th className="py-2 px-2">R</th>
-                    <th className="py-2 px-2">RBI</th>
-                    <th className="py-2 px-2">BB</th>
-                    <th className="py-2 px-2">HBP</th>
-                    <th className="py-2 px-2">SO</th>
-                    <th className="py-2 px-2">SB</th>
-                    <th className="py-2 px-2">CS</th>
-                    <th className="py-2 px-2">Point</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">{t('common.player')}</th>
+                    <th className="py-2 px-2"><StatTooltip abbr="PA">PA</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="AB">AB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="1B">1B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="2B">2B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="3B">3B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HR">HR</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="R">R</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="RBI">RBI</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="BB">BB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HBP">HBP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SO">SO</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SB">SB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="CS">CS</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Point">Point</StatTooltip></th>
                   </tr>
                 </thead>
                 <tbody>
                   {battingStats.map((record) => (
                     <tr key={`${record.jersey_number}-${record.first_name}-${record.last_name}`} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">
                         #{record.jersey_number} {record.first_name} {record.last_name}
                       </td>
                       <td className="py-2 px-2 text-center">{formatValue(record.plate_appearances)}</td>
@@ -264,23 +265,23 @@ export default function GameDetailPage() {
               <table className="w-full text-sm text-white border-collapse">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.player')}</th>
-                    <th className="py-2 px-2">IP</th>
-                    <th className="py-2 px-2">W</th>
-                    <th className="py-2 px-2">K</th>
-                    <th className="py-2 px-2">R</th>
-                    <th className="py-2 px-2">ER</th>
-                    <th className="py-2 px-2">H</th>
-                    <th className="py-2 px-2">BB</th>
-                    <th className="py-2 px-2">HBP</th>
-                    <th className="py-2 px-2">Pitches</th>
-                    <th className="py-2 px-2">Point</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">{t('common.player')}</th>
+                    <th className="py-2 px-2"><StatTooltip abbr="IP">IP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="W">W</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SO">K</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="RA">R</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="ER">ER</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="H">H</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="BB">BB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HBP">HBP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Pitches">Pitches</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Point">Point</StatTooltip></th>
                   </tr>
                 </thead>
                 <tbody>
                   {pitchingStats.map((record) => (
                     <tr key={`${record.jersey_number}-${record.first_name}-${record.last_name}`} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[7rem]">
                         #{record.jersey_number} {record.first_name} {record.last_name}
                       </td>
                       <td className="py-2 px-2 text-center">{formatValue(record.innings_pitched)}</td>

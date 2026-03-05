@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useMyPlayer } from '../hooks/useMyPlayer.ts';
 import API_BASE_URL from '../apiBaseUrl';
 
 const THROTTLE_KEY = 'korebaps_visitor_last_record';
@@ -36,6 +37,7 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
   var lang = ctx.lang;
   var setLang = ctx.setLang;
   var t = ctx.t;
+  var { myPlayer } = useMyPlayer();
 
   var _vs = useState(null);
   var vStats = _vs[0];
@@ -127,8 +129,20 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
       </div>
 
       {/* Row 2: Social links + Nav buttons */}
-      {(social || action) ? (
+      {(social || action || myPlayer) ? (
         <div className="flex flex-wrap items-center gap-2 mb-4">
+          {myPlayer ? (
+            <button
+              type="button"
+              onClick={function () {
+                var params = new URLSearchParams({ playerNumber: myPlayer.playerNumber, playerName: myPlayer.playerName });
+                window.location.href = '/player?' + params.toString();
+              }}
+              className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
+            >
+              {t('common.myStats')}
+            </button>
+          ) : null}
           {social}
           {action}
         </div>

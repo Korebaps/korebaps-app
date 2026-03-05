@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, Pin, PinOff } from 'lucide-react';
 import Header from '../components/Header';
+import { StatTooltip } from '../components/StatTooltip.tsx';
+import { useMyPlayer } from '../hooks/useMyPlayer.ts';
 import Footer from '../components/Footer';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../apiBaseUrl';
@@ -129,6 +131,13 @@ export default function PlayerDetailPage() {
   const [walkupArtUrl, setWalkupArtUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [compareSeasonA, setCompareSeasonA] = useState<number | null>(null);
+  const [compareSeasonB, setCompareSeasonB] = useState<number | null>(null);
+  const [compareBattingA, setCompareBattingA] = useState<CareerBattingStats | null>(null);
+  const [compareBattingB, setCompareBattingB] = useState<CareerBattingStats | null>(null);
+  const [comparePitchingA, setComparePitchingA] = useState<CareerPitchingStats | null>(null);
+  const [comparePitchingB, setComparePitchingB] = useState<CareerPitchingStats | null>(null);
+  const [compareLoading, setCompareLoading] = useState(false);
 
   const nameParts = playerName.trim().split(' ').filter(Boolean);
   const firstName = nameParts[0] ?? '';
@@ -250,6 +259,40 @@ export default function PlayerDetailPage() {
   }, [firstName, lastName, playerName, playerNumber, selectedSeasonId]);
 
   useEffect(() => {
+    const loadCompareStats = async () => {
+      if (!playerNumber || !playerName || !compareSeasonA || !compareSeasonB || compareSeasonA === compareSeasonB) {
+        setCompareBattingA(null);
+        setCompareBattingB(null);
+        setComparePitchingA(null);
+        setComparePitchingB(null);
+        return;
+      }
+      try {
+        setCompareLoading(true);
+        const baseParams = { jerseyNumber: playerNumber, firstName, lastName };
+        const [batA, batB, pitA, pitB] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/player-career-batting-stats?${new URLSearchParams({ ...baseParams, seasonId: String(compareSeasonA) }).toString()}`).then((r) => r.ok ? r.json() : null),
+          fetch(`${API_BASE_URL}/api/player-career-batting-stats?${new URLSearchParams({ ...baseParams, seasonId: String(compareSeasonB) }).toString()}`).then((r) => r.ok ? r.json() : null),
+          fetch(`${API_BASE_URL}/api/player-career-pitching-stats?${new URLSearchParams({ ...baseParams, seasonId: String(compareSeasonA) }).toString()}`).then((r) => r.ok ? r.json() : null),
+          fetch(`${API_BASE_URL}/api/player-career-pitching-stats?${new URLSearchParams({ ...baseParams, seasonId: String(compareSeasonB) }).toString()}`).then((r) => r.ok ? r.json() : null),
+        ]);
+        setCompareBattingA(batA);
+        setCompareBattingB(batB);
+        setComparePitchingA(pitA);
+        setComparePitchingB(pitB);
+      } catch {
+        setCompareBattingA(null);
+        setCompareBattingB(null);
+        setComparePitchingA(null);
+        setComparePitchingB(null);
+      } finally {
+        setCompareLoading(false);
+      }
+    };
+    loadCompareStats();
+  }, [firstName, lastName, playerName, playerNumber, compareSeasonA, compareSeasonB]);
+
+  useEffect(() => {
     const loadGameStats = async () => {
       if (!playerNumber || !playerName) {
         setGameStats([]);
@@ -317,6 +360,27 @@ export default function PlayerDetailPage() {
           ]}
           action={(
             <div className="flex flex-wrap gap-2">
+              {playerNumber && playerName && (
+                isPinned(playerNumber, playerName) ? (
+                  <button
+                    onClick={() => unpinPlayer()}
+                    className="px-4 py-2 rounded-lg border border-[#daaa00] bg-[#daaa00]/20 text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition flex items-center gap-2"
+                    title={t('player.unpinMyStats')}
+                  >
+                    <PinOff className="w-4 h-4" />
+                    {t('player.unpinMyStats')}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => pinPlayer(playerNumber, playerName)}
+                    className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition flex items-center gap-2"
+                    title={t('player.pinMyStats')}
+                  >
+                    <Pin className="w-4 h-4" />
+                    {t('player.pinMyStats')}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => {
                   window.location.href = '/roster';
@@ -537,6 +601,82 @@ export default function PlayerDetailPage() {
           )}
         </section>
 
+        {seasons.length >= 2 && playerNumber && playerName && (
+          <section className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-6 border-[#daaa00]/60">
+            <h2 className="text-xl font-bold text-[#daaa00] mb-4">{t('player.compareSeasons')}</h2>
+            <div className="flex flex-wrap gap-4 mb-4">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">{t('player.seasonA')}</label>
+                <select
+                  value={compareSeasonA ?? ''}
+                  onChange={(e) => setCompareSeasonA(e.target.value ? Number(e.target.value) : null)}
+                  className="bg-gray-900 border border-gray-500 text-white rounded-lg px-3 py-2 min-w-[8rem]"
+                >
+                  <option value="">—</option>
+                  {seasons.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">{t('player.seasonB')}</label>
+                <select
+                  value={compareSeasonB ?? ''}
+                  onChange={(e) => setCompareSeasonB(e.target.value ? Number(e.target.value) : null)}
+                  className="bg-gray-900 border border-gray-500 text-white rounded-lg px-3 py-2 min-w-[8rem]"
+                >
+                  <option value="">—</option>
+                  {seasons.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {(!compareSeasonA || !compareSeasonB || compareSeasonA === compareSeasonB) ? (
+              <p className="text-gray-400 text-sm">{t('player.selectTwoSeasons')}</p>
+            ) : compareLoading ? (
+              <p className="text-gray-400">{t('common.loading')}</p>
+            ) : (compareBattingA || compareBattingB || comparePitchingA || comparePitchingB) ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#daaa00] mb-2">{seasons.find((s) => s.id === compareSeasonA)?.label ?? 'A'}</h3>
+                  <div className="space-y-2 text-sm text-white">
+                    {compareBattingA && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <span className="text-gray-400">G/PA/AB:</span><span>{formatValue(compareBattingA.games)}/{formatValue(compareBattingA.pa)}/{formatValue(compareBattingA.ab)}</span>
+                        <span className="text-gray-400">AVG/OBP/SLG:</span><span>{formatValue(compareBattingA.avg)}/{formatValue(compareBattingA.obp)}/{formatValue(compareBattingA.slg)}</span>
+                      </div>
+                    )}
+                    {comparePitchingA && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <span className="text-gray-400">IP/W/ERA:</span><span>{formatValue(comparePitchingA.ip)}/{formatValue(comparePitchingA.w)}/{formatValue(comparePitchingA.era)}</span>
+                      </div>
+                    )}
+                    {!compareBattingA && !comparePitchingA && <span className="text-gray-400">No stats</span>}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#daaa00] mb-2">{seasons.find((s) => s.id === compareSeasonB)?.label ?? 'B'}</h3>
+                  <div className="space-y-2 text-sm text-white">
+                    {compareBattingB && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <span className="text-gray-400">G/PA/AB:</span><span>{formatValue(compareBattingB.games)}/{formatValue(compareBattingB.pa)}/{formatValue(compareBattingB.ab)}</span>
+                        <span className="text-gray-400">AVG/OBP/SLG:</span><span>{formatValue(compareBattingB.avg)}/{formatValue(compareBattingB.obp)}/{formatValue(compareBattingB.slg)}</span>
+                      </div>
+                    )}
+                    {comparePitchingB && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <span className="text-gray-400">IP/W/ERA:</span><span>{formatValue(comparePitchingB.ip)}/{formatValue(comparePitchingB.w)}/{formatValue(comparePitchingB.era)}</span>
+                      </div>
+                    )}
+                    {!compareBattingB && !comparePitchingB && <span className="text-gray-400">No stats</span>}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        )}
+
         <section className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 mt-8 ${isActive ? 'border-[#daaa00]' : 'border-gray-500'}`}>
           <div className="flex items-center gap-2 mb-4">
             <Calculator className={`w-6 h-6 ${isActive ? 'text-[#daaa00]' : 'text-gray-400'}`} />
@@ -551,34 +691,34 @@ export default function PlayerDetailPage() {
           ) : gameStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[600px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
-                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left sticky left-[5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.opponent')}</th>
                     <th className="py-2 px-2">{t('common.score')}</th>
-                    <th className="py-2 px-2">PA</th>
-                    <th className="py-2 px-2">AB</th>
-                    <th className="py-2 px-2">1B</th>
-                    <th className="py-2 px-2">2B</th>
-                    <th className="py-2 px-2">3B</th>
-                    <th className="py-2 px-2">HR</th>
-                    <th className="py-2 px-2">R</th>
-                    <th className="py-2 px-2">RBI</th>
-                    <th className="py-2 px-2">BB</th>
-                    <th className="py-2 px-2">HBP</th>
-                    <th className="py-2 px-2">SO</th>
-                    <th className="py-2 px-2">SB</th>
-                    <th className="py-2 px-2">CS</th>
-                    <th className="py-2 px-2">Point</th>
+                    <th className="py-2 px-2"><StatTooltip abbr="PA">PA</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="AB">AB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="1B">1B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="2B">2B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="3B">3B</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HR">HR</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="R">R</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="RBI">RBI</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="BB">BB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HBP">HBP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SO">SO</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SB">SB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="CS">CS</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Point">Point</StatTooltip></th>
                   </tr>
                 </thead>
                 <tbody>
                   {gameStats.map((record) => (
                     <tr key={record.game_id} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">{new Date(record.game_date).toLocaleDateString()}</td>
-                      <td className="py-2 px-2 text-left font-semibold">{record.opponent}</td>
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{new Date(record.game_date).toLocaleDateString()}</td>
+                      <td className="py-2 px-2 text-left font-semibold sticky left-[5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{record.opponent}</td>
                       <td className="py-2 px-2 text-center">
                         {formatScore(record.score, record.opp_score)}
                       </td>
@@ -622,32 +762,32 @@ export default function PlayerDetailPage() {
           ) : pitchingStats.length === 0 ? (
             <div className="text-center text-gray-400">{t('player.noGameRecords')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-white border-collapse">
+            <div className="overflow-x-auto -mx-2 md:mx-0">
+              <table className="w-full text-sm text-white border-collapse min-w-[600px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">{t('common.date')}</th>
-                    <th className="py-2 px-2 text-left">{t('common.opponent')}</th>
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.date')}</th>
+                    <th className="py-2 px-2 text-left sticky left-[5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{t('common.opponent')}</th>
                     <th className="py-2 px-2">{t('common.score')}</th>
-                    <th className="py-2 px-2">IP</th>
-                    <th className="py-2 px-2">W</th>
-                    <th className="py-2 px-2">K</th>
-                    <th className="py-2 px-2">R</th>
-                    <th className="py-2 px-2">ER</th>
-                    <th className="py-2 px-2">H</th>
-                    <th className="py-2 px-2">BB</th>
-                    <th className="py-2 px-2">HBP</th>
-                    <th className="py-2 px-2">Pitches</th>
-                    <th className="py-2 px-2">Point</th>
+                    <th className="py-2 px-2"><StatTooltip abbr="IP">IP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="W">W</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="SO">K</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="RA">R</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="ER">ER</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="H">H</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="BB">BB</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="HBP">HBP</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Pitches">Pitches</StatTooltip></th>
+                    <th className="py-2 px-2"><StatTooltip abbr="Point">Point</StatTooltip></th>
                   </tr>
                 </thead>
                 <tbody>
                   {pitchingStats.map((record) => (
                     <tr key={record.game_id} className="border-b border-gray-700">
-                      <td className="py-2 px-2 text-left text-[#daaa00]">
+                      <td className="py-2 px-2 text-left text-[#daaa00] sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">
                         {new Date(record.game_date).toLocaleDateString()}
                       </td>
-                      <td className="py-2 px-2 text-left font-semibold">{record.opponent}</td>
+                      <td className="py-2 px-2 text-left font-semibold sticky left-[5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[5rem]">{record.opponent}</td>
                       <td className="py-2 px-2 text-center">
                         {formatScore(record.score, record.opp_score)}
                       </td>

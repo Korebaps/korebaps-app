@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { PointTable } from './components/PointTable';
+import { StatTooltip } from './components/StatTooltip.tsx';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
@@ -133,6 +134,7 @@ function MainDashboard() {
   const [pitchingError, setPitchingError] = useState<string | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showInactivePlayers, setShowInactivePlayers] = useState(false);
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   const [latestGameDate, setLatestGameDate] = useState<string | null>(null);
 
 
@@ -466,15 +468,17 @@ function MainDashboard() {
   }, [filteredPitchingRows, pitchingSort]);
 
   const renderSortHeader = (
-    label: string,
+    label: string | React.ReactNode,
     key: string,
     activeSort: { key: string; direction: 'asc' | 'desc' } | null,
     onChange: (nextSort: { key: string; direction: 'asc' | 'desc' }) => void,
     align: 'left' | 'center' = 'center',
+    tooltipAbbr?: string,
   ) => {
     const isActive = activeSort?.key === key;
     const nextDirection = isActive && activeSort?.direction === 'asc' ? 'desc' : 'asc';
     const icon = !isActive ? '↕' : activeSort?.direction === 'asc' ? '▲' : '▼';
+    const displayLabel = tooltipAbbr ? <StatTooltip abbr={tooltipAbbr}>{label}</StatTooltip> : label;
     return (
       <button
         type="button"
@@ -483,7 +487,7 @@ function MainDashboard() {
           align === 'left' ? '' : 'justify-center'
         }`}
       >
-        <span>{label}</span>
+        <span>{displayLabel}</span>
         <span className="text-[#daaa00]">{icon}</span>
       </button>
     );
@@ -570,6 +574,12 @@ function MainDashboard() {
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
               >
                 {t('common.gameRecords')}
+              </button>
+              <button
+                onClick={() => { window.location.href = '/compare'; }}
+                className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
+              >
+                {t('common.comparePlayers')}
               </button>
             </>
           )}
@@ -668,6 +678,14 @@ function MainDashboard() {
     />
     {t('app.includeRetired')}
   </label>
+  <input
+    type="search"
+    placeholder={t('app.searchPlayer')}
+    value={playerSearchQuery}
+    onChange={(e) => setPlayerSearchQuery(e.target.value)}
+    className="w-full sm:w-48 rounded-lg border-2 border-[#daaa00] bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-[#daaa00] focus:outline-none focus:ring-2 focus:ring-[#daaa00]"
+    aria-label={t('app.searchPlayer')}
+  />
 </div>
             </div>
           </section>
@@ -681,76 +699,76 @@ function MainDashboard() {
             ) : battingError ? (
               <div className="text-center text-red-500">{battingError}</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-white border-collapse">
+              <div className="overflow-x-auto -mx-2 md:mx-0">
+                <table className="w-full text-sm text-white border-collapse min-w-[640px]">
                   <thead className="text-xs text-gray-300">
                     <tr className="border-b border-[#daaa00]">
-                      <th className="py-2 px-2 text-left">
+                      <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)]">
                         {renderSortHeader('#', 'playerNumber', battingSort, setBattingSort, 'left')}
                       </th>
-                      <th className="py-2 px-2 text-left">
+                      <th className="py-2 px-2 text-left sticky left-[2.5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem]">
                         {renderSortHeader(t('common.player'), 'playerName', battingSort, setBattingSort, 'left')}
                       </th>
                       {selectedSeasonId && (
                         <th className="py-2 px-2 text-left">
-                          {renderSortHeader('G', 'gamesPlayed', battingSort, setBattingSort, 'left')}
+                          {renderSortHeader('G', 'gamesPlayed', battingSort, setBattingSort, 'left', 'G')}
                         </th>
                       )}
                       <th className="py-2 px-2">
-                        {renderSortHeader('PA', 'plateAppearances', battingSort, setBattingSort)}
+                        {renderSortHeader('PA', 'plateAppearances', battingSort, setBattingSort, 'center', 'PA')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('AB', 'atBats', battingSort, setBattingSort)}
+                        {renderSortHeader('AB', 'atBats', battingSort, setBattingSort, 'center', 'AB')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('1B', 'singles', battingSort, setBattingSort)}
+                        {renderSortHeader('1B', 'singles', battingSort, setBattingSort, 'center', '1B')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('2B', 'doubles', battingSort, setBattingSort)}
+                        {renderSortHeader('2B', 'doubles', battingSort, setBattingSort, 'center', '2B')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('3B', 'triples', battingSort, setBattingSort)}
+                        {renderSortHeader('3B', 'triples', battingSort, setBattingSort, 'center', '3B')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('HR', 'homeRuns', battingSort, setBattingSort)}
+                        {renderSortHeader('HR', 'homeRuns', battingSort, setBattingSort, 'center', 'HR')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('R', 'runs', battingSort, setBattingSort)}
+                        {renderSortHeader('R', 'runs', battingSort, setBattingSort, 'center', 'R')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('RBI', 'rbi', battingSort, setBattingSort)}
+                        {renderSortHeader('RBI', 'rbi', battingSort, setBattingSort, 'center', 'RBI')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('BB', 'walks', battingSort, setBattingSort)}
+                        {renderSortHeader('BB', 'walks', battingSort, setBattingSort, 'center', 'BB')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('HBP', 'hitByPitch', battingSort, setBattingSort)}
+                        {renderSortHeader('HBP', 'hitByPitch', battingSort, setBattingSort, 'center', 'HBP')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('SO', 'strikeouts', battingSort, setBattingSort)}
+                        {renderSortHeader('SO', 'strikeouts', battingSort, setBattingSort, 'center', 'SO')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('SB', 'stolenBases', battingSort, setBattingSort)}
+                        {renderSortHeader('SB', 'stolenBases', battingSort, setBattingSort, 'center', 'SB')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('AVG', 'avg', battingSort, setBattingSort)}
+                        {renderSortHeader('AVG', 'avg', battingSort, setBattingSort, 'center', 'AVG')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('OBP', 'obp', battingSort, setBattingSort)}
+                        {renderSortHeader('OBP', 'obp', battingSort, setBattingSort, 'center', 'OBP')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('SLG', 'slg', battingSort, setBattingSort)}
+                        {renderSortHeader('SLG', 'slg', battingSort, setBattingSort, 'center', 'SLG')}
                       </th>
                       <th className="py-2 px-2">
-                        {renderSortHeader('OPS', 'ops', battingSort, setBattingSort)}
+                        {renderSortHeader('OPS', 'ops', battingSort, setBattingSort, 'center', 'OPS')}
                       </th>
                       {selectedSeasonId && (
                         <th className="py-2 px-2">
-                          {renderSortHeader('WAR', 'war', battingSort, setBattingSort)}
+                          {renderSortHeader('WAR', 'war', battingSort, setBattingSort, 'center', 'WAR')}
                         </th>
                       )}
                       <th className="py-2 px-2">
-                        {renderSortHeader('Score', 'score', battingSort, setBattingSort)}
+                        {renderSortHeader('Score', 'score', battingSort, setBattingSort, 'center', 'Score')}
                       </th>
                     </tr>
                   </thead>
@@ -760,15 +778,12 @@ function MainDashboard() {
                         key={record.id}
                         className={`border-b border-gray-700 transition-colors hover:bg-[#daaa00]/10 ${!record.isActive ? 'opacity-70' : ''}`}
                       >
-                        <td className={`py-2 px-2 ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
+                        <td className={`py-2 px-2 text-left sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
                           <button
                             type="button"
                             onClick={() => {
-                              const params = new URLSearchParams({
-                                playerNumber: record.playerNumber,
-                                playerName: record.playerName,
-                                seasonId: String(selectedSeasonId),
-                              });
+                              const params = new URLSearchParams({ playerNumber: record.playerNumber, playerName: record.playerName });
+                              if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
                               window.location.href = `/player?${params.toString()}`;
                             }}
                             className={`font-semibold ${record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}`}
@@ -776,15 +791,12 @@ function MainDashboard() {
                             {record.playerNumber}
                           </button>
                         </td>
-                        <td className={`py-2 px-2 font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
+                        <td className={`py-2 px-2 text-left sticky left-[2.5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem] font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
                           <button
                             type="button"
                             onClick={() => {
-                              const params = new URLSearchParams({
-                                playerNumber: record.playerNumber,
-                                playerName: record.playerName,
-                                seasonId: String(selectedSeasonId),
-                              });
+                              const params = new URLSearchParams({ playerNumber: record.playerNumber, playerName: record.playerName });
+                              if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
                               window.location.href = `/player?${params.toString()}`;
                             }}
                             className={record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}
@@ -873,53 +885,53 @@ function MainDashboard() {
             ) : pitchingError ? (
               <div className="text-center text-red-500">{pitchingError}</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-white border-collapse">
+              <div className="overflow-x-auto -mx-2 md:mx-0">
+                <table className="w-full text-sm text-white border-collapse min-w-[640px]">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left">
+                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)]">
                       {renderSortHeader('#', 'playerNumber', pitchingSort, setPitchingSort, 'left')}
                     </th>
-                    <th className="py-2 px-2 text-left">
+                    <th className="py-2 px-2 text-left sticky left-[2.5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem]">
                       {renderSortHeader(t('common.player'), 'playerName', pitchingSort, setPitchingSort, 'left')}
                     </th>
                     {selectedSeasonId && (
                       <th className="py-2 px-2 text-left">
-                        {renderSortHeader('G', 'gamesPlayed', pitchingSort, setPitchingSort, 'left')}
+                        {renderSortHeader('G', 'gamesPlayed', pitchingSort, setPitchingSort, 'left', 'G')}
                       </th>
                     )}
                     <th className="py-2 px-2">
-                      {renderSortHeader('IP', 'inningsPitched', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('IP', 'inningsPitched', pitchingSort, setPitchingSort, 'center', 'IP')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('Win', 'wins', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('Win', 'wins', pitchingSort, setPitchingSort, 'center', 'W')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('K', 'strikeouts', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('K', 'strikeouts', pitchingSort, setPitchingSort, 'center', 'SO')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader(t('app.runsAllowed'), 'runsAllowed', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.runsAllowed'), 'runsAllowed', pitchingSort, setPitchingSort, 'center', 'RA')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader(t('app.earnedRuns'), 'earnedRuns', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.earnedRuns'), 'earnedRuns', pitchingSort, setPitchingSort, 'center', 'ER')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('H', 'hitsAllowed', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('H', 'hitsAllowed', pitchingSort, setPitchingSort, 'center', 'H')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('BB', 'walks', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('BB', 'walks', pitchingSort, setPitchingSort, 'center', 'BB')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader(t('app.pitchCount'), 'pitchCount', pitchingSort, setPitchingSort)}
+                      {renderSortHeader(t('app.pitchCount'), 'pitchCount', pitchingSort, setPitchingSort, 'center', 'Pitches')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('ERA', 'era', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('ERA', 'era', pitchingSort, setPitchingSort, 'center', 'ERA')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('WHIP', 'whip', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('WHIP', 'whip', pitchingSort, setPitchingSort, 'center', 'WHIP')}
                     </th>
                     <th className="py-2 px-2">
-                      {renderSortHeader('Point', 'score', pitchingSort, setPitchingSort)}
+                      {renderSortHeader('Point', 'score', pitchingSort, setPitchingSort, 'center', 'Point')}
                     </th>
                   </tr>
                 </thead>
@@ -929,15 +941,12 @@ function MainDashboard() {
                       key={record.id}
                       className={`border-b border-gray-700 transition-colors hover:bg-[#daaa00]/10 ${!record.isActive ? 'opacity-70' : ''}`}
                     >
-                      <td className={`py-2 px-2 ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
+                      <td className={`py-2 px-2 text-left sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
                         <button
                           type="button"
                           onClick={() => {
-                            const params = new URLSearchParams({
-                              playerNumber: record.playerNumber,
-                              playerName: record.playerName,
-                              seasonId: String(selectedSeasonId),
-                            });
+                            const params = new URLSearchParams({ playerNumber: record.playerNumber, playerName: record.playerName });
+                            if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
                             window.location.href = `/player?${params.toString()}`;
                           }}
                           className={`font-semibold ${record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}`}
@@ -945,15 +954,12 @@ function MainDashboard() {
                           {record.playerNumber}
                         </button>
                       </td>
-                      <td className={`py-2 px-2 font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
+                      <td className={`py-2 px-2 text-left sticky left-[2.5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem] font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
                         <button
                           type="button"
                           onClick={() => {
-                            const params = new URLSearchParams({
-                              playerNumber: record.playerNumber,
-                              playerName: record.playerName,
-                              seasonId: String(selectedSeasonId),
-                            });
+                            const params = new URLSearchParams({ playerNumber: record.playerNumber, playerName: record.playerName });
+                            if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
                             window.location.href = `/player?${params.toString()}`;
                           }}
                           className={record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}
