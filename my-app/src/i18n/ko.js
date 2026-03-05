@@ -4,6 +4,7 @@ const ko = {
 
   // Footer
   'footer.copyright': '© 2026 코레밥스 Stats Dashboard. All rights reserved.',
+  'footer.createdBy': 'Created by Junsu Yoon #17 and Taerim Kim #66',
 
   // Visitor Banner
   'visitor.unavailable': '방문자 통계를 불러올 수 없습니다',

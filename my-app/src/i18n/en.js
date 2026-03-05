@@ -4,6 +4,7 @@ const en = {
 
   // Footer
   'footer.copyright': '© 2026 Korebaps Stats Dashboard. All rights reserved.',
+  'footer.createdBy': 'Created by Junsu Yoon #17 and Taerim Kim #66',
 
   // Visitor Banner
   'visitor.unavailable': 'Visitor stats unavailable',
