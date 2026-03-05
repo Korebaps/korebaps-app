@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
 import { useLanguage } from './i18n/LanguageContext';
 
 function Videos() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   const feedUrl = useMemo(() => (
@@ -110,12 +109,12 @@ function Videos() {
           ]}
           action={(
             <div className="flex flex-wrap gap-2">
-              <Link
-                to="/"
+              <button
+                onClick={() => window.location.href = '/'}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 {t('common.home')}
-              </Link>
+              </button>
               <a
                 href="https://www.youtube.com/@Korebaps?sub_confirmation=1"
                 target="_blank"
@@ -249,7 +248,7 @@ function Videos() {
                   </div>
                   {video.publishedAt && (
                     <p className="text-gray-500 text-xs mt-1">
-                      {new Date(video.publishedAt).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US')}
+                      {new Date(video.publishedAt).toLocaleDateString()}
                     </p>
                   )}
                 </div>

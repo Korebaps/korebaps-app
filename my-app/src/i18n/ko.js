@@ -15,7 +15,6 @@ const ko = {
   // Common
   'common.loading': '로딩 중...',
   'common.home': '메인으로',
-  'common.back': '뒤로',
   'common.activeRoster': '현역 로스터',
   'common.gameRecords': '경기 기록',
   'common.videos': '영상',
@@ -32,16 +31,6 @@ const ko = {
   'common.status': '상태',
   'common.close': '닫기',
   'common.refresh': '새로고침',
-  'common.retry': '다시 시도',
-  'nav.home': '메인',
-  'nav.roster': '로스터',
-  'nav.games': '경기',
-  'nav.videos': '영상',
-  'nav.myStats': '내 기록',
-  'player.pinStats': '내 기록으로 고정',
-  'player.unpinStats': '고정 해제',
-  'player.share': '공유',
-  'player.shareCopied': '링크 복사됨!',
   'suffix.players': '명',
   'suffix.games': '경기',
 
@@ -53,7 +42,6 @@ const ko = {
   'app.seasonSelect': '시즌 선택',
   'app.loadingSeasons': '시즌 로딩 중...',
   'app.includeRetired': '은퇴 선수 포함',
-  'app.searchPlayer': '선수 검색...',
   'app.battingStats': '타격 스탯',
   'app.pitchingStats': '투구 스탯',
   'app.runsAllowed': '실점',
@@ -129,19 +117,6 @@ const ko = {
   'videos.tryLater': '잠시 후 다시 시도해주세요.',
   'videos.visitChannel': '더 많은 영상을 보려면 YouTube 채널을 방문하세요!',
   'videos.viewAllYouTube': 'YouTube에서 모든 영상 보기',
-
-  // Stat tooltips
-  'stats.PA': 'PA = 타석 (볼넷, 몸에 맞는 공 포함)',
-  'stats.AB': 'AB = 타수 (공식 타수, 볼넷·몸에 맞는 공 제외)',
-  'stats.AVG': 'AVG = 타율 (안타 / 타수)',
-  'stats.OBP': 'OBP = 출루율 ((안타 + 볼넷 + 몸에 맞는 공) / 타석)',
-  'stats.SLG': 'SLG = 장타율 (총 루타 / 타수)',
-  'stats.OPS': 'OPS = 출루율 + 장타율',
-  'stats.WAR': 'WAR = 대체 선수 대비 승리 기여도',
-  'stats.ERA': 'ERA = 방어율 (자책점 × 9 / 이닝)',
-  'stats.WHIP': 'WHIP = 이닝당 볼넷 + 안타',
-  'stats.IP': 'IP = 이닝 pitched',
-  'stats.G': 'G = 출장 경기',
 
   // Point Table
   'points.heading': '포인트 기준표',

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { PlusCircle, Download, Trash2, Award, ChevronDown, ChevronRight } from 'lucide-react';
 import { BattingRecordForm } from './components/BattingRecordForm';
 import { PitchingRecordForm } from './components/PitchingRecordForm';
@@ -1273,18 +1272,22 @@ export default function AdminDashboard() {
               >
                 로그아웃
               </button>
-              <Link
-                to="/roster"
+              <button
+                onClick={() => {
+                  window.location.href = '/roster';
+                }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 현역 로스터
-              </Link>
-              <Link
-                to="/"
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = '/';
+                }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
               >
                 메인으로
-              </Link>
+              </button>
             </div>
           )}
         />

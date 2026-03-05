@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calculator, Search } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { PointTable } from './components/PointTable';
-import { StatTooltip } from './components/StatTooltip.tsx';
-import { TableSkeleton } from './components/TableSkeleton.tsx';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import logo from './assets/logo.png';
@@ -136,7 +133,6 @@ function MainDashboard() {
   const [pitchingError, setPitchingError] = useState<string | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showInactivePlayers, setShowInactivePlayers] = useState(false);
-  const [playerSearch, setPlayerSearch] = useState('');
   const [latestGameDate, setLatestGameDate] = useState<string | null>(null);
 
 
@@ -164,14 +160,13 @@ function MainDashboard() {
     fetchSeasons();
   }, []);
 
-  const [carouselPaused, setCarouselPaused] = useState(false);
   useEffect(() => {
-    if (carouselPaused) return;
     const interval = window.setInterval(() => {
       setCarouselIndex((prev) => (prev + 1) % carouselImages.length);
     }, 4500);
+
     return () => window.clearInterval(interval);
-  }, [carouselPaused]);
+  }, []);
 
   useEffect(() => {
     const loadLatestGame = async () => {
@@ -209,59 +204,78 @@ function MainDashboard() {
     };
 
 
-  const loadBattingStats = useCallback(async () => {
-    try {
-      setBattingLoading(true);
-      setBattingError(null);
-      const battingParams = new URLSearchParams();
-      if (selectedSeasonId) battingParams.set('seasonId', String(selectedSeasonId));
-      const response = await fetch(
-        `${API_BASE_URL}/api/seasonal-batting-stats?${battingParams.toString()}`,
-      );
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = (await response.json()) as BattingStatsApiRow[];
-      const mapped = data.map((row) => ({
-        id: `${row.jersey_number}-${row.first_name}-${row.last_name}`,
-        playerNumber: String(row.jersey_number),
-        playerName: `${row.first_name} ${row.last_name}`.trim(),
-        gamesPlayed: mapApiNumber(row.games_played ?? row.total_games ?? row.gamesPlayed),
-        ops: typeof row.total_ops === 'number' ? row.total_ops : undefined,
-        plateAppearances: mapApiNumber(row.total_pa),
-        atBats: mapApiNumber(row.total_ab),
-        singles: mapApiNumber(row.total_1b),
-        doubles: mapApiNumber(row.total_2b),
-        triples: mapApiNumber(row.total_3b),
-        homeRuns: mapApiNumber(row.total_hr),
-        runs: mapApiNumber(row.total_runs),
-        rbi: mapApiNumber(row.total_rbi),
-        walks: mapApiNumber(row.total_bb),
-        hitByPitch: mapApiNumber(row.total_hbp),
-        strikeouts: mapApiNumber(row.total_strikeouts),
-        stolenBases: mapApiNumber(row.total_sb),
-        isMVP: false,
-        war: row.season_owar ? Number(row.season_owar).toFixed(3) : '0.000',
-        isActive: row.is_active === 1,
-      }));
-      setBattingRecords(mapped);
-    } catch (error) {
-      setBattingError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setBattingLoading(false);
-    }
+  useEffect(() => {
+    const loadBattingStats = async () => {
+      try {
+        setBattingLoading(true);
+        setBattingError(null);
+
+        const battingParams = new URLSearchParams();
+        if (selectedSeasonId) {
+          battingParams.set('seasonId', String(selectedSeasonId));
+        }
+        const response = await fetch(
+          `${API_BASE_URL}/api/seasonal-batting-stats?${battingParams.toString()}`,
+        );
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = (await response.json()) as BattingStatsApiRow[];
+        const mapped = data.map((row) => ({
+          id: `${row.jersey_number}-${row.first_name}-${row.last_name}`,
+          playerNumber: String(row.jersey_number),
+          playerName: `${row.first_name} ${row.last_name}`.trim(),
+          gamesPlayed: mapApiNumber(row.games_played ?? row.total_games ?? row.gamesPlayed),
+          ops: typeof row.total_ops === 'number' ? row.total_ops : undefined,
+          plateAppearances: mapApiNumber(row.total_pa),
+          atBats: mapApiNumber(row.total_ab),
+          singles: mapApiNumber(row.total_1b),
+          doubles: mapApiNumber(row.total_2b),
+          triples: mapApiNumber(row.total_3b),
+          homeRuns: mapApiNumber(row.total_hr),
+          runs: mapApiNumber(row.total_runs),
+          rbi: mapApiNumber(row.total_rbi),
+          walks: mapApiNumber(row.total_bb),
+          hitByPitch: mapApiNumber(row.total_hbp),
+          strikeouts: mapApiNumber(row.total_strikeouts),
+          stolenBases: mapApiNumber(row.total_sb),
+          isMVP: false,
+          war: row.season_owar ? Number(row.season_owar).toFixed(3) : '0.000',
+          isActive: row.is_active === 1,
+        }));
+
+        setBattingRecords(mapped);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setBattingError(message);
+      } finally {
+        setBattingLoading(false);
+      }
+    };
+
+    loadBattingStats();
   }, [selectedSeasonId]);
 
-  const loadPitchingStats = useCallback(async () => {
-    try {
-      setPitchingLoading(true);
-      setPitchingError(null);
-      const pitchingParams = new URLSearchParams();
-      if (selectedSeasonId) pitchingParams.set('seasonId', String(selectedSeasonId));
-      const response = await fetch(
-        `${API_BASE_URL}/api/seasonal-pitching-stats?${pitchingParams.toString()}`,
-      );
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = (await response.json()) as PitchingStatsApiRow[];
-      const mapped = data.map((row) => ({
+  useEffect(() => {
+    const loadPitchingStats = async () => {
+      try {
+        setPitchingLoading(true);
+        setPitchingError(null);
+
+        const pitchingParams = new URLSearchParams();
+        if (selectedSeasonId) {
+          pitchingParams.set('seasonId', String(selectedSeasonId));
+        }
+        const response = await fetch(
+          `${API_BASE_URL}/api/seasonal-pitching-stats?${pitchingParams.toString()}`,
+        );
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = (await response.json()) as PitchingStatsApiRow[];
+        const mapped = data.map((row) => ({
           id: `${row.jersey_number}-${row.first_name}-${row.last_name}`,
           playerNumber: String(row.jersey_number),
           playerName: `${row.first_name} ${row.last_name}`.trim(),
@@ -279,17 +293,19 @@ function MainDashboard() {
           whip: mapApiNumber(row.whip),
           score: mapApiNumber(row.total_pitching_points),
           isActive: row.is_active === 1,
-      }));
-      setPitchingRecords(mapped);
-    } catch (error) {
-      setPitchingError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setPitchingLoading(false);
-    }
-  }, [selectedSeasonId]);
+        }));
 
-  useEffect(() => { loadBattingStats(); }, [loadBattingStats]);
-  useEffect(() => { loadPitchingStats(); }, [loadPitchingStats]);
+        setPitchingRecords(mapped);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setPitchingError(message);
+      } finally {
+        setPitchingLoading(false);
+      }
+    };
+
+    loadPitchingStats();
+  }, [selectedSeasonId]);
 
   const calculateBattingAvg = (record: BattingRecord) => {
     if (!record.atBats) return '-.---';
@@ -400,30 +416,14 @@ function MainDashboard() {
   [pitchingRecords]);
 
   const filteredBattingRows = useMemo(() => {
-    let rows = showInactivePlayers ? battingRows : battingRows.filter(row => row.isActive);
-    if (playerSearch.trim()) {
-      const q = playerSearch.trim().toLowerCase();
-      rows = rows.filter(
-        (r) =>
-          r.playerName.toLowerCase().includes(q) ||
-          r.playerNumber.toLowerCase().includes(q),
-      );
-    }
-    return rows;
-  }, [battingRows, showInactivePlayers, playerSearch]);
+    if (showInactivePlayers) return battingRows;
+    return battingRows.filter(row => row.isActive);
+  }, [battingRows, showInactivePlayers]);
 
   const filteredPitchingRows = useMemo(() => {
-    let rows = showInactivePlayers ? pitchingRows : pitchingRows.filter(row => row.isActive);
-    if (playerSearch.trim()) {
-      const q = playerSearch.trim().toLowerCase();
-      rows = rows.filter(
-        (r) =>
-          r.playerName.toLowerCase().includes(q) ||
-          r.playerNumber.toLowerCase().includes(q),
-      );
-    }
-    return rows;
-  }, [pitchingRows, showInactivePlayers, playerSearch]);
+    if (showInactivePlayers) return pitchingRows;
+    return pitchingRows.filter(row => row.isActive);
+  }, [pitchingRows, showInactivePlayers]);
 
   const sortedBattingRecords = useMemo(() => {
     if (!battingSort) return filteredBattingRows;
@@ -465,20 +465,6 @@ function MainDashboard() {
     return direction === 'asc' ? sorted : sorted.reverse();
   }, [filteredPitchingRows, pitchingSort]);
 
-  const STAT_TOOLTIP_KEYS: Record<string, string> = {
-    plateAppearances: 'PA',
-    atBats: 'AB',
-    avg: 'AVG',
-    obp: 'OBP',
-    slg: 'SLG',
-    ops: 'OPS',
-    war: 'WAR',
-    era: 'ERA',
-    whip: 'WHIP',
-    inningsPitched: 'IP',
-    gamesPlayed: 'G',
-  };
-
   const renderSortHeader = (
     label: string,
     key: string,
@@ -489,12 +475,6 @@ function MainDashboard() {
     const isActive = activeSort?.key === key;
     const nextDirection = isActive && activeSort?.direction === 'asc' ? 'desc' : 'asc';
     const icon = !isActive ? '↕' : activeSort?.direction === 'asc' ? '▲' : '▼';
-    const statKey = STAT_TOOLTIP_KEYS[key];
-    const labelEl = statKey ? (
-      <StatTooltip statKey={statKey}>{label}</StatTooltip>
-    ) : (
-      <span>{label}</span>
-    );
     return (
       <button
         type="button"
@@ -503,7 +483,7 @@ function MainDashboard() {
           align === 'left' ? '' : 'justify-center'
         }`}
       >
-        {labelEl}
+        <span>{label}</span>
         <span className="text-[#daaa00]">{icon}</span>
       </button>
     );
@@ -529,12 +509,6 @@ function MainDashboard() {
 
   const handleCarouselNext = () => {
     setCarouselIndex((prev) => (prev + 1) % carouselImages.length);
-  };
-
-  const getPlayerPath = (playerNumber: string, playerName: string) => {
-    const params = new URLSearchParams({ playerNumber, playerName });
-    if (selectedSeasonId != null) params.set('seasonId', String(selectedSeasonId));
-    return `/player?${params.toString()}`;
   };
 
   return (
@@ -579,35 +553,29 @@ function MainDashboard() {
           )}
           action={(
             <>
-              <Link
-                to="/media"
+              <button
+                onClick={() => { window.location.href = '/media'; }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
               >
                 {t('common.videos')}
-              </Link>
-              <Link
-                to="/roster"
+              </button>
+              <button
+                onClick={() => { window.location.href = '/roster'; }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
               >
                 {t('common.roster')}
-              </Link>
-              <Link
-                to="/games"
+              </button>
+              <button
+                onClick={() => { window.location.href = '/games'; }}
                 className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition text-sm"
               >
                 {t('common.gameRecords')}
-              </Link>
+              </button>
             </>
           )}
         />
 
-        <section
-          className="relative overflow-hidden rounded-2xl border-2 border-[#daaa00] bg-gray-900 shadow-lg mb-6"
-          onMouseEnter={() => setCarouselPaused(true)}
-          onMouseLeave={() => setCarouselPaused(false)}
-          onFocus={() => setCarouselPaused(true)}
-          onBlur={() => setCarouselPaused(false)}
-        >
+        <section className="relative overflow-hidden rounded-2xl border-2 border-[#daaa00] bg-gray-900 shadow-lg mb-6">
           <div className="relative h-64 w-full sm:h-80 md:h-96">
             {carouselImages.map((src, index) => (
               <img
@@ -700,16 +668,6 @@ function MainDashboard() {
     />
     {t('app.includeRetired')}
   </label>
-  <div className="relative w-full sm:w-48">
-    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-    <input
-      type="text"
-      value={playerSearch}
-      onChange={(e) => setPlayerSearch(e.target.value)}
-      placeholder={t('app.searchPlayer')}
-      className="w-full rounded-lg border-2 border-[#daaa00] bg-gray-800 pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:border-[#daaa00] focus:outline-none focus:ring-2 focus:ring-[#daaa00]"
-    />
-  </div>
 </div>
             </div>
           </section>
@@ -719,30 +677,18 @@ function MainDashboard() {
               <h2 className="text-xl font-bold text-[#daaa00]">{t('app.battingStats')}</h2>
             </div>
             {battingLoading ? (
-              <TableSkeleton rows={10} cols={18} />
+              <div className="text-center text-gray-400">{t('common.loading')}</div>
             ) : battingError ? (
-              <div className="text-center py-4">
-                <p className="text-red-500 mb-3">{battingError}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBattingError(null);
-                    loadBattingStats();
-                  }}
-                  className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
-                >
-                  {t('common.retry')}
-                </button>
-              </div>
+              <div className="text-center text-red-500">{battingError}</div>
             ) : (
-              <div className="overflow-x-auto -mx-2 md:mx-0">
-                <table className="w-full text-sm text-white border-collapse min-w-[640px]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-white border-collapse">
                   <thead className="text-xs text-gray-300">
                     <tr className="border-b border-[#daaa00]">
-                      <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)]">
+                      <th className="py-2 px-2 text-left">
                         {renderSortHeader('#', 'playerNumber', battingSort, setBattingSort, 'left')}
                       </th>
-                      <th className="py-2 px-2 text-left sticky left-[2.5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem]">
+                      <th className="py-2 px-2 text-left">
                         {renderSortHeader(t('common.player'), 'playerName', battingSort, setBattingSort, 'left')}
                       </th>
                       {selectedSeasonId && (
@@ -814,21 +760,37 @@ function MainDashboard() {
                         key={record.id}
                         className={`border-b border-gray-700 transition-colors hover:bg-[#daaa00]/10 ${!record.isActive ? 'opacity-70' : ''}`}
                       >
-                        <td className={`py-2 px-2 text-left sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
-                          <Link
-                            to={getPlayerPath(record.playerNumber, record.playerName)}
+                        <td className={`py-2 px-2 ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const params = new URLSearchParams({
+                                playerNumber: record.playerNumber,
+                                playerName: record.playerName,
+                                seasonId: String(selectedSeasonId),
+                              });
+                              window.location.href = `/player?${params.toString()}`;
+                            }}
                             className={`font-semibold ${record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}`}
                           >
                             {record.playerNumber}
-                          </Link>
+                          </button>
                         </td>
-                        <td className={`py-2 px-2 text-left sticky left-[2.5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem] font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
-                          <Link
-                            to={getPlayerPath(record.playerNumber, record.playerName)}
+                        <td className={`py-2 px-2 font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const params = new URLSearchParams({
+                                playerNumber: record.playerNumber,
+                                playerName: record.playerName,
+                                seasonId: String(selectedSeasonId),
+                              });
+                              window.location.href = `/player?${params.toString()}`;
+                            }}
                             className={record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}
                           >
                             {record.playerName}
-                          </Link>
+                          </button>
                         </td>
                         {selectedSeasonId && (
                           <td className={`py-2 px-2 text-left ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
@@ -907,30 +869,18 @@ function MainDashboard() {
               <h2 className="text-xl font-bold text-[#daaa00]">{t('app.pitchingStats')}</h2>
             </div>
             {pitchingLoading ? (
-              <TableSkeleton rows={8} cols={14} />
+              <div className="text-center text-gray-400">{t('common.loading')}</div>
             ) : pitchingError ? (
-              <div className="text-center py-4">
-                <p className="text-red-500 mb-3">{pitchingError}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPitchingError(null);
-                    loadPitchingStats();
-                  }}
-                  className="px-4 py-2 rounded-lg border border-[#daaa00] text-[#daaa00] hover:bg-[#daaa00] hover:text-black transition"
-                >
-                  {t('common.retry')}
-                </button>
-              </div>
+              <div className="text-center text-red-500">{pitchingError}</div>
             ) : (
-              <div className="overflow-x-auto -mx-2 md:mx-0">
-                <table className="w-full text-sm text-white border-collapse min-w-[640px]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-white border-collapse">
                 <thead className="text-xs text-gray-300">
                   <tr className="border-b border-[#daaa00]">
-                    <th className="py-2 px-2 text-left sticky left-0 z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)]">
+                    <th className="py-2 px-2 text-left">
                       {renderSortHeader('#', 'playerNumber', pitchingSort, setPitchingSort, 'left')}
                     </th>
-                    <th className="py-2 px-2 text-left sticky left-[2.5rem] z-20 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem]">
+                    <th className="py-2 px-2 text-left">
                       {renderSortHeader(t('common.player'), 'playerName', pitchingSort, setPitchingSort, 'left')}
                     </th>
                     {selectedSeasonId && (
@@ -979,21 +929,37 @@ function MainDashboard() {
                       key={record.id}
                       className={`border-b border-gray-700 transition-colors hover:bg-[#daaa00]/10 ${!record.isActive ? 'opacity-70' : ''}`}
                     >
-                      <td className={`py-2 px-2 text-left sticky left-0 z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
-                        <Link
-                          to={getPlayerPath(record.playerNumber, record.playerName)}
+                      <td className={`py-2 px-2 ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const params = new URLSearchParams({
+                              playerNumber: record.playerNumber,
+                              playerName: record.playerName,
+                              seasonId: String(selectedSeasonId),
+                            });
+                            window.location.href = `/player?${params.toString()}`;
+                          }}
                           className={`font-semibold ${record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}`}
                         >
                           {record.playerNumber}
-                        </Link>
+                        </button>
                       </td>
-                      <td className={`py-2 px-2 text-left sticky left-[2.5rem] z-10 bg-gray-900 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.4)] min-w-[6rem] font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
-                        <Link
-                          to={getPlayerPath(record.playerNumber, record.playerName)}
+                      <td className={`py-2 px-2 font-semibold ${!record.isActive ? 'text-gray-400' : ''}`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const params = new URLSearchParams({
+                              playerNumber: record.playerNumber,
+                              playerName: record.playerName,
+                              seasonId: String(selectedSeasonId),
+                            });
+                            window.location.href = `/player?${params.toString()}`;
+                          }}
                           className={record.isActive ? 'hover:text-white' : 'hover:text-gray-400'}
                         >
                           {record.playerName}
-                        </Link>
+                        </button>
                       </td>
                       {selectedSeasonId && (
                         <td className={`py-2 px-2 text-left ${record.isActive ? 'text-[#daaa00]' : 'text-gray-400'}`}>
@@ -1044,12 +1010,14 @@ function MainDashboard() {
 
         <PointTable />
         <div className="mt-8 flex justify-end">
-          <Link
-            to="/admin"
+          <button
+            onClick={() => {
+              window.location.href = '/admin';
+            }}
             className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:border-[#daaa00] hover:text-[#daaa00] transition text-sm"
           >
             {t('common.admin')}
-          </Link>
+          </button>
         </div>
 
         <Footer />
