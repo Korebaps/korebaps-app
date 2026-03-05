@@ -432,8 +432,6 @@ app.post('/api/batting-stats', requireAdmin, async (req, res) => {
       isMVP: req.body?.isMVP ? 1 : 0,
     };
 
-    const battingPoints = calculateBattingPoints(payload);
-
     const [updateResult] = await pool.execute(
       `
         update batting_stats
@@ -451,8 +449,7 @@ app.post('/api/batting-stats', requireAdmin, async (req, res) => {
           sacs = ?,
           stolen_bases = ?,
           caught_stealing = ?,
-          is_mvp = ?,
-          batting_points = ?
+          is_mvp = ?
         where game_id = ? and player_id = ?
       `,
       [
@@ -470,7 +467,6 @@ app.post('/api/batting-stats', requireAdmin, async (req, res) => {
         payload.stolenBases,
         payload.caughtStealing,
         payload.isMVP,
-        battingPoints,
         gameId,
         playerId,
       ],
@@ -495,9 +491,8 @@ app.post('/api/batting-stats', requireAdmin, async (req, res) => {
             sacs,
             stolen_bases,
             caught_stealing,
-            is_mvp,
-            batting_points
-          ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            is_mvp
+          ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           gameId,
@@ -516,7 +511,6 @@ app.post('/api/batting-stats', requireAdmin, async (req, res) => {
           payload.stolenBases,
           payload.caughtStealing,
           payload.isMVP,
-          battingPoints,
         ],
       );
     }
