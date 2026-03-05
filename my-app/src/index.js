@@ -25,7 +25,7 @@ const pathname = basePath && window.location.pathname.startsWith(basePath)
   ? window.location.pathname.slice(basePath.length) || '/'
   : window.location.pathname;
 const isPlayerPage = pathname.startsWith('/player');
-const isAdminPage = pathname.startsWith('/admin');
+const isAdminPage = pathname.startsWith('/admin') && !pathname.startsWith('/admin_guide');
 const isRosterPage = pathname.startsWith('/roster');
 const isGamesPage = pathname.startsWith('/games');
 const isGameDetailPage = pathname.startsWith('/game');
