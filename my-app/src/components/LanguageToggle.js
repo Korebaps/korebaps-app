@@ -1,15 +1,9 @@
 import { useLanguage } from '../i18n/LanguageContext';
 
 export default function LanguageToggle() {
-  var lang, setLang;
-  try {
-    var ctx = useLanguage();
-    lang = ctx.lang;
-    setLang = ctx.setLang;
-  } catch (e) {
-    lang = 'en';
-    setLang = function() {};
-  }
+  var ctx = useLanguage();
+  var lang = ctx.lang;
+  var setLang = ctx.setLang;
 
   return (
     <div className="inline-flex shrink-0 rounded-lg border-2 border-[#daaa00] overflow-hidden text-sm font-bold">

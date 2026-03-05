@@ -34,8 +34,7 @@ function markRecorded() {
 }
 
 export default function VisitorBanner() {
-  var t;
-  try { t = useLanguage().t; } catch (e) { t = function(k) { return k; }; }
+  var t = useLanguage().t;
 
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(false);

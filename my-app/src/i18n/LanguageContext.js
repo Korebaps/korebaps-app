@@ -35,10 +35,13 @@ export function LanguageProvider({ children }) {
   );
 }
 
+var fallback = {
+  lang: 'en',
+  setLang: function() {},
+  t: function(key) { return en[key] || key; },
+};
+
 export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return ctx;
+  var ctx = useContext(LanguageContext);
+  return ctx || fallback;
 }
