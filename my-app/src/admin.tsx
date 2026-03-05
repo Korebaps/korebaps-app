@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PlusCircle, Download, Trash2, Award } from 'lucide-react';
+import { PlusCircle, Download, Trash2, Award, ChevronDown, ChevronRight } from 'lucide-react';
 import { BattingRecordForm } from './components/BattingRecordForm';
 import { PitchingRecordForm } from './components/PitchingRecordForm';
 import { RecordSummary } from './components/RecordSummary';
@@ -125,6 +125,18 @@ export default function AdminDashboard() {
 
   const [battingRecords, setBattingRecords] = useState<any[]>([]);
   const [pitchingRecords, setPitchingRecords] = useState<any[]>([]);
+
+  const [editingGameId, setEditingGameId] = useState<number | null>(null);
+  const [gameEditBatting, setGameEditBatting] = useState<any[]>([]);
+  const [gameEditPitching, setGameEditPitching] = useState<any[]>([]);
+  const [editingRowKey, setEditingRowKey] = useState<string | null>(null);
+  const [editRowValues, setEditRowValues] = useState<Record<string, any>>({});
+  const [savingRowKey, setSavingRowKey] = useState<string | null>(null);
+  const [savedRowKey, setSavedRowKey] = useState<string | null>(null);
+  const [statsEditorLoading, setStatsEditorLoading] = useState(false);
+  const [statsEditorError, setStatsEditorError] = useState<string | null>(null);
+  const [showBattingEditor, setShowBattingEditor] = useState(true);
+  const [showPitchingEditor, setShowPitchingEditor] = useState(true);
 
   const authFetch = (url: string, options?: RequestInit) => {
     const baseHeaders: Record<string, string> = {
@@ -441,7 +453,6 @@ export default function AdminDashboard() {
         gameId,
         playerId,
         plateAppearances: record.plateAppearances,
-        atBats: record.atBats,
         singles: record.singles,
         doubles: record.doubles,
         triples: record.triples,
@@ -451,6 +462,7 @@ export default function AdminDashboard() {
         walks: record.walks,
         hitByPitch: record.hitByPitch,
         strikeouts: record.strikeouts,
+        sacs: record.sacs ?? 0,
         stolenBases: record.stolenBases,
         caughtStealing: record.caughtStealing ?? 0,
         isMVP: record.isMVP ? 1 : 0,
@@ -676,6 +688,150 @@ export default function AdminDashboard() {
     link.href = URL.createObjectURL(blob);
     link.download = `야구기록_${seasonLabel}_${gameDate}_${opponent || '상대팀'}.csv`;
     link.click();
+  };
+
+  const loadGameEditStats = async (gameId: number) => {
+    try {
+      setStatsEditorLoading(true);
+      setStatsEditorError(null);
+      const params = new URLSearchParams({ gameId: String(gameId) });
+      const [battingRes, pitchingRes] = await Promise.all([
+        authFetch(`${API_BASE_URL}/api/game-batting-stats?${params.toString()}`),
+        authFetch(`${API_BASE_URL}/api/game-pitching-stats?${params.toString()}`),
+      ]);
+      if (battingRes.ok) {
+        const data = await battingRes.json();
+        setGameEditBatting(Array.isArray(data) ? data : []);
+      }
+      if (pitchingRes.ok) {
+        const data = await pitchingRes.json();
+        setGameEditPitching(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setStatsEditorError(message);
+    } finally {
+      setStatsEditorLoading(false);
+    }
+  };
+
+  const startEditRow = (type: 'batting' | 'pitching', row: any) => {
+    const key = `${type}-${row.player_id}`;
+    if (editingRowKey === key) return;
+    setEditingRowKey(key);
+    if (type === 'batting') {
+      setEditRowValues({
+        plate_appearances: row.plate_appearances ?? 0,
+        singles: row.singles ?? 0,
+        doubles: row.doubles ?? 0,
+        triples: row.triples ?? 0,
+        home_runs: row.home_runs ?? 0,
+        runs_scored: row.runs_scored ?? 0,
+        rbi: row.rbi ?? 0,
+        walks: row.walks ?? 0,
+        hit_by_pitch: row.hit_by_pitch ?? 0,
+        strikeouts: row.strikeouts ?? 0,
+        sacs: row.sacs ?? 0,
+        stolen_bases: row.stolen_bases ?? 0,
+        caught_stealing: row.caught_stealing ?? 0,
+        is_mvp: row.is_mvp ?? 0,
+      });
+    } else {
+      setEditRowValues({
+        outs_recorded: row.outs_recorded ?? 0,
+        pitches_thrown: row.pitches_thrown ?? 0,
+        hits_allowed: row.hits_allowed ?? 0,
+        runs_allowed: row.runs_allowed ?? 0,
+        earned_runs: row.earned_runs ?? 0,
+        strikeouts: row.strikeouts ?? 0,
+        walks: row.walks ?? 0,
+        hit_by_pitch: row.hit_by_pitch ?? 0,
+        wins: row.wins ?? 0,
+        losses: row.losses ?? 0,
+        save_earned: row.save_earned ?? 0,
+        is_mvp: row.is_mvp ?? 0,
+      });
+    }
+  };
+
+  const cancelEditRow = () => {
+    setEditingRowKey(null);
+    setEditRowValues({});
+  };
+
+  const saveEditRow = async () => {
+    if (!editingRowKey || !editingGameId) return;
+    const [type, playerIdStr] = editingRowKey.split('-');
+    const playerId = Number(playerIdStr);
+    try {
+      setSavingRowKey(editingRowKey);
+      if (type === 'batting') {
+        await saveBattingStats(editingGameId, playerId, {
+          plateAppearances: editRowValues.plate_appearances,
+          singles: editRowValues.singles,
+          doubles: editRowValues.doubles,
+          triples: editRowValues.triples,
+          homeRuns: editRowValues.home_runs,
+          runs: editRowValues.runs_scored,
+          rbi: editRowValues.rbi,
+          walks: editRowValues.walks,
+          hitByPitch: editRowValues.hit_by_pitch,
+          strikeouts: editRowValues.strikeouts,
+          sacs: editRowValues.sacs,
+          stolenBases: editRowValues.stolen_bases,
+          caughtStealing: editRowValues.caught_stealing,
+          isMVP: editRowValues.is_mvp,
+        });
+      } else {
+        await savePitchingStats(editingGameId, playerId, {
+          outsRecorded: editRowValues.outs_recorded,
+          pitchCount: editRowValues.pitches_thrown,
+          hitsAllowed: editRowValues.hits_allowed,
+          runsAllowed: editRowValues.runs_allowed,
+          earnedRuns: editRowValues.earned_runs,
+          strikeouts: editRowValues.strikeouts,
+          walks: editRowValues.walks,
+          hitByPitch: editRowValues.hit_by_pitch,
+          wins: editRowValues.wins,
+          losses: editRowValues.losses,
+          saveEarned: editRowValues.save_earned,
+          isMVP: editRowValues.is_mvp,
+        });
+      }
+      const savedKey = editingRowKey;
+      setSavedRowKey(savedKey);
+      setEditingRowKey(null);
+      setEditRowValues({});
+      await loadGameEditStats(editingGameId);
+      setTimeout(() => setSavedRowKey(null), 1500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setStatsEditorError(message);
+    } finally {
+      setSavingRowKey(null);
+    }
+  };
+
+  const updateEditValue = (field: string, value: any) => {
+    setEditRowValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleGameCardClick = async (gameId: number) => {
+    if (editingGameId === gameId) {
+      setEditingGameId(null);
+      setGameEditBatting([]);
+      setGameEditPitching([]);
+      cancelEditRow();
+      return;
+    }
+    cancelEditRow();
+    setEditingGameId(gameId);
+    await loadGameEditStats(gameId);
+  };
+
+  const formatOuts = (outs: number | null) => {
+    if (outs === null || outs === undefined) return '-';
+    return `${Math.floor(outs / 3)}.${outs % 3}`;
   };
 
   const refreshSeasons = async () => {
@@ -1290,6 +1446,7 @@ export default function AdminDashboard() {
         ) : null}
 
         {activeTab === 'games' ? (
+          <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
               <div className="flex items-center gap-2 mb-4">
@@ -1412,13 +1569,18 @@ export default function AdminDashboard() {
                     const isLoss = g.score !== null && g.opp_score !== null && g.score < g.opp_score;
                     const isDraw = g.score !== null && g.opp_score !== null && g.score === g.opp_score;
 
+                    const isSelected = editingGameId === g.game_id;
+
                     return (
                       <div
                         key={g.game_id}
-                        className={`rounded-xl p-4 transition border-2 ${
-                          hasStats
-                            ? 'bg-gray-800/80 border-green-800/60'
-                            : 'bg-gray-800/50 border-gray-700/50'
+                        onClick={() => handleGameCardClick(g.game_id)}
+                        className={`rounded-xl p-4 transition border-2 cursor-pointer ${
+                          isSelected
+                            ? 'border-[#daaa00] bg-gray-800 ring-1 ring-[#daaa00]/30'
+                            : hasStats
+                              ? 'bg-gray-800/80 border-green-800/60 hover:border-green-700'
+                              : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -1460,7 +1622,8 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <button
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               const statsWarning = hasStats
                                 ? `\n\n⚠️ 이 경기에는 타격 ${g.batting_count}건, 투구 ${g.pitching_count}건의 기록이 있습니다. 모두 삭제됩니다.`
                                 : '';
@@ -1478,6 +1641,12 @@ export default function AdminDashboard() {
                                   if (listResponse.ok) {
                                     const data = (await listResponse.json()) as GameRecord[];
                                     setGames(data);
+                                  }
+                                  if (editingGameId === g.game_id) {
+                                    setEditingGameId(null);
+                                    setGameEditBatting([]);
+                                    setGameEditPitching([]);
+                                    cancelEditRow();
                                   }
                                 } catch (err) {
                                   console.error('Failed to delete game:', err);
@@ -1498,6 +1667,301 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+
+          {editingGameId && (() => {
+            const editGame = games.find((g) => g.game_id === editingGameId);
+            const editGameLabel = editGame
+              ? `${editGame.game_date?.includes('T') ? editGame.game_date.split('T')[0] : editGame.game_date} vs ${editGame.opponent}`
+              : '';
+
+            const battingFields: { key: string; label: string }[] = [
+              { key: 'plate_appearances', label: 'PA' },
+              { key: 'singles', label: '1B' },
+              { key: 'doubles', label: '2B' },
+              { key: 'triples', label: '3B' },
+              { key: 'home_runs', label: 'HR' },
+              { key: 'runs_scored', label: 'R' },
+              { key: 'rbi', label: 'RBI' },
+              { key: 'walks', label: 'BB' },
+              { key: 'strikeouts', label: 'SO' },
+              { key: 'hit_by_pitch', label: 'HBP' },
+              { key: 'sacs', label: 'SAC' },
+              { key: 'stolen_bases', label: 'SB' },
+              { key: 'caught_stealing', label: 'CS' },
+            ];
+
+            const pitchingFields: { key: string; label: string }[] = [
+              { key: 'outs_recorded', label: 'Outs' },
+              { key: 'pitches_thrown', label: '#P' },
+              { key: 'hits_allowed', label: 'H' },
+              { key: 'runs_allowed', label: 'R' },
+              { key: 'earned_runs', label: 'ER' },
+              { key: 'strikeouts', label: 'SO' },
+              { key: 'walks', label: 'BB' },
+              { key: 'hit_by_pitch', label: 'HBP' },
+              { key: 'wins', label: 'W' },
+              { key: 'losses', label: 'L' },
+              { key: 'save_earned', label: 'SV' },
+            ];
+
+            return (
+              <div className="mt-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg p-6 border-2 border-[#daaa00]">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-[#daaa00]">
+                    {editGameLabel} — 기록 수정
+                  </h2>
+                  <button
+                    onClick={() => { setEditingGameId(null); setGameEditBatting([]); setGameEditPitching([]); cancelEditRow(); }}
+                    className="text-gray-400 hover:text-white text-sm transition"
+                  >
+                    닫기 ✕
+                  </button>
+                </div>
+
+                {statsEditorError && (
+                  <div className="mb-3 text-sm text-red-400 bg-red-900/20 px-3 py-2 rounded-lg">{statsEditorError}</div>
+                )}
+
+                {statsEditorLoading ? (
+                  <p className="text-gray-400 text-center py-8">Loading...</p>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Batting section */}
+                    <div>
+                      <button
+                        onClick={() => setShowBattingEditor(!showBattingEditor)}
+                        className="flex items-center gap-2 text-[#daaa00] font-bold text-sm mb-3 hover:text-yellow-300 transition"
+                      >
+                        {showBattingEditor ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        타격 기록 ({gameEditBatting.length})
+                      </button>
+                      {showBattingEditor && (
+                        gameEditBatting.length === 0 ? (
+                          <p className="text-gray-500 text-sm pl-6">이 경기에 등록된 타격 기록이 없습니다.</p>
+                        ) : (
+                          <div className="overflow-x-auto rounded-lg border border-gray-700">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-gray-800 text-gray-400 border-b border-gray-700">
+                                  <th className="px-2 py-2 text-left font-medium">#</th>
+                                  <th className="px-2 py-2 text-left font-medium">Name</th>
+                                  {battingFields.map((f) => (
+                                    <th key={f.key} className="px-2 py-2 text-center font-medium whitespace-nowrap">{f.label}</th>
+                                  ))}
+                                  <th className="px-2 py-2 text-center font-medium">MVP</th>
+                                  <th className="px-3 py-2 text-center font-medium">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {gameEditBatting.map((row) => {
+                                  const rowKey = `batting-${row.player_id}`;
+                                  const isEditing = editingRowKey === rowKey;
+                                  const isSaving = savingRowKey === rowKey;
+                                  const justSaved = savedRowKey === rowKey;
+
+                                  return (
+                                    <tr
+                                      key={row.player_id}
+                                      onClick={() => { if (!isEditing) startEditRow('batting', row); }}
+                                      className={`border-b border-gray-700/50 transition-colors duration-500 ${
+                                        justSaved
+                                          ? 'bg-green-900/30'
+                                          : isEditing
+                                            ? 'bg-gray-800/80'
+                                            : 'hover:bg-gray-800/40 cursor-pointer'
+                                      }`}
+                                    >
+                                      <td className="px-2 py-2 text-[#daaa00] font-bold">{row.jersey_number}</td>
+                                      <td className="px-2 py-2 text-white whitespace-nowrap">
+                                        {row.first_name} {row.last_name}
+                                      </td>
+                                      {battingFields.map((f) => (
+                                        <td key={f.key} className="px-2 py-2 text-center">
+                                          {isEditing ? (
+                                            <input
+                                              type="number"
+                                              value={editRowValues[f.key] ?? 0}
+                                              onChange={(e) => updateEditValue(f.key, Number(e.target.value) || 0)}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="w-12 px-1 py-0.5 bg-gray-900 border border-[#daaa00]/40 text-white rounded text-center text-xs focus:border-[#daaa00] focus:outline-none"
+                                            />
+                                          ) : (
+                                            <span className="text-gray-300">{row[f.key] ?? 0}</span>
+                                          )}
+                                        </td>
+                                      ))}
+                                      <td className="px-2 py-2 text-center">
+                                        {isEditing ? (
+                                          <input
+                                            type="checkbox"
+                                            checked={!!editRowValues.is_mvp}
+                                            onChange={(e) => updateEditValue('is_mvp', e.target.checked ? 1 : 0)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="accent-[#daaa00] w-4 h-4"
+                                          />
+                                        ) : (
+                                          row.is_mvp ? <Award className="w-3.5 h-3.5 text-[#daaa00] mx-auto" /> : <span className="text-gray-600">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                                        {isEditing ? (
+                                          <div className="flex items-center justify-center gap-1.5">
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); saveEditRow(); }}
+                                              disabled={isSaving}
+                                              className="px-2 py-1 rounded bg-[#daaa00] text-black text-[10px] font-bold hover:bg-yellow-500 disabled:opacity-50 transition"
+                                            >
+                                              {isSaving ? '...' : '저장'}
+                                            </button>
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); cancelEditRow(); }}
+                                              className="px-2 py-1 rounded bg-gray-700 text-gray-300 text-[10px] font-medium hover:bg-gray-600 transition"
+                                            >
+                                              취소
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-600 text-[10px]">클릭하여 수정</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    {/* Pitching section */}
+                    <div>
+                      <button
+                        onClick={() => setShowPitchingEditor(!showPitchingEditor)}
+                        className="flex items-center gap-2 text-[#daaa00] font-bold text-sm mb-3 hover:text-yellow-300 transition"
+                      >
+                        {showPitchingEditor ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        투구 기록 ({gameEditPitching.length})
+                      </button>
+                      {showPitchingEditor && (
+                        gameEditPitching.length === 0 ? (
+                          <p className="text-gray-500 text-sm pl-6">이 경기에 등록된 투구 기록이 없습니다.</p>
+                        ) : (
+                          <div className="overflow-x-auto rounded-lg border border-gray-700">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-gray-800 text-gray-400 border-b border-gray-700">
+                                  <th className="px-2 py-2 text-left font-medium">#</th>
+                                  <th className="px-2 py-2 text-left font-medium">Name</th>
+                                  <th className="px-2 py-2 text-center font-medium">IP</th>
+                                  {pitchingFields.filter((f) => f.key !== 'outs_recorded').map((f) => (
+                                    <th key={f.key} className="px-2 py-2 text-center font-medium whitespace-nowrap">{f.label}</th>
+                                  ))}
+                                  <th className="px-2 py-2 text-center font-medium">MVP</th>
+                                  <th className="px-3 py-2 text-center font-medium">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {gameEditPitching.map((row) => {
+                                  const rowKey = `pitching-${row.player_id}`;
+                                  const isEditing = editingRowKey === rowKey;
+                                  const isSaving = savingRowKey === rowKey;
+                                  const justSaved = savedRowKey === rowKey;
+
+                                  return (
+                                    <tr
+                                      key={row.player_id}
+                                      onClick={() => { if (!isEditing) startEditRow('pitching', row); }}
+                                      className={`border-b border-gray-700/50 transition-colors duration-500 ${
+                                        justSaved
+                                          ? 'bg-green-900/30'
+                                          : isEditing
+                                            ? 'bg-gray-800/80'
+                                            : 'hover:bg-gray-800/40 cursor-pointer'
+                                      }`}
+                                    >
+                                      <td className="px-2 py-2 text-[#daaa00] font-bold">{row.jersey_number}</td>
+                                      <td className="px-2 py-2 text-white whitespace-nowrap">
+                                        {row.first_name} {row.last_name}
+                                      </td>
+                                      <td className="px-2 py-2 text-center">
+                                        {isEditing ? (
+                                          <input
+                                            type="number"
+                                            value={editRowValues.outs_recorded ?? 0}
+                                            onChange={(e) => updateEditValue('outs_recorded', Number(e.target.value) || 0)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Outs recorded (${formatOuts(editRowValues.outs_recorded)} IP)`}
+                                            className="w-12 px-1 py-0.5 bg-gray-900 border border-[#daaa00]/40 text-white rounded text-center text-xs focus:border-[#daaa00] focus:outline-none"
+                                          />
+                                        ) : (
+                                          <span className="text-gray-300">{row.innings_pitched ?? '-'}</span>
+                                        )}
+                                      </td>
+                                      {pitchingFields.filter((f) => f.key !== 'outs_recorded').map((f) => (
+                                        <td key={f.key} className="px-2 py-2 text-center">
+                                          {isEditing ? (
+                                            <input
+                                              type="number"
+                                              value={editRowValues[f.key] ?? 0}
+                                              onChange={(e) => updateEditValue(f.key, Number(e.target.value) || 0)}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="w-12 px-1 py-0.5 bg-gray-900 border border-[#daaa00]/40 text-white rounded text-center text-xs focus:border-[#daaa00] focus:outline-none"
+                                            />
+                                          ) : (
+                                            <span className="text-gray-300">{row[f.key] ?? 0}</span>
+                                          )}
+                                        </td>
+                                      ))}
+                                      <td className="px-2 py-2 text-center">
+                                        {isEditing ? (
+                                          <input
+                                            type="checkbox"
+                                            checked={!!editRowValues.is_mvp}
+                                            onChange={(e) => updateEditValue('is_mvp', e.target.checked ? 1 : 0)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="accent-[#daaa00] w-4 h-4"
+                                          />
+                                        ) : (
+                                          row.is_mvp ? <Award className="w-3.5 h-3.5 text-[#daaa00] mx-auto" /> : <span className="text-gray-600">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                                        {isEditing ? (
+                                          <div className="flex items-center justify-center gap-1.5">
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); saveEditRow(); }}
+                                              disabled={isSaving}
+                                              className="px-2 py-1 rounded bg-[#daaa00] text-black text-[10px] font-bold hover:bg-yellow-500 disabled:opacity-50 transition"
+                                            >
+                                              {isSaving ? '...' : '저장'}
+                                            </button>
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); cancelEditRow(); }}
+                                              className="px-2 py-1 rounded bg-gray-700 text-gray-300 text-[10px] font-medium hover:bg-gray-600 transition"
+                                            >
+                                              취소
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-600 text-[10px]">클릭하여 수정</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          </>
         ) : null}
 
         {activeTab === 'players' ? (() => {

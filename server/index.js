@@ -1377,6 +1377,8 @@ app.get('/api/game-batting-stats', async (req, res) => {
           bs.strikeouts,
           bs.stolen_bases,
           bs.caught_stealing,
+          bs.sacs,
+          bs.is_mvp,
           bs.batting_points
         from batting_stats bs
         join players p on bs.player_id = p.player_id
@@ -1408,11 +1410,14 @@ app.get('/api/game-pitching-stats', async (req, res) => {
           p.jersey_number,
           p.first_name,
           p.last_name,
+          ps.outs_recorded,
           case
             when ps.outs_recorded is null then null
             else concat(floor(ps.outs_recorded / 3), '.', mod(ps.outs_recorded, 3))
           end as innings_pitched,
           ps.w as wins,
+          ps.l as losses,
+          ps.save_earned,
           ps.strikeouts,
           ps.runs_allowed,
           ps.earned_runs,
@@ -1420,6 +1425,7 @@ app.get('/api/game-pitching-stats', async (req, res) => {
           ps.walks_allowed as walks,
           ps.hit_batters as hit_by_pitch,
           ps.pitches_thrown,
+          ps.is_mvp,
           ps.pitching_points
         from pitching_stats ps
         join players p on ps.player_id = p.player_id
