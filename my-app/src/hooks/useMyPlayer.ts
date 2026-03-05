@@ -9,14 +9,15 @@ export type MyPlayer = {
 
 function loadFromStorage(): MyPlayer {
   try {
+    if (typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { playerNumber?: string; playerName?: string };
-    if (parsed?.playerNumber && parsed?.playerName) {
+    if (parsed?.playerNumber != null && parsed?.playerName != null) {
       return { playerNumber: String(parsed.playerNumber), playerName: String(parsed.playerName) };
     }
   } catch {
-    // ignore
+    // ignore - localStorage may be disabled or unavailable
   }
   return null;
 }

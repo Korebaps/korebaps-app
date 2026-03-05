@@ -10,11 +10,18 @@ import GameDetailPage from './pages/GameDetailPage.tsx';
 import PlayerComparisonPage from './pages/PlayerComparisonPage.tsx';
 import Videos from './Videos.tsx';
 import MainLayout from './components/MainLayout.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { LanguageProvider } from './i18n/LanguageContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-const pathname = window.location.pathname;
+
+// Support deployment with base path (e.g. /korebaps-app)
+const publicUrl = process.env.PUBLIC_URL || '';
+const basePath = publicUrl && publicUrl.startsWith('/') ? publicUrl.replace(/\/$/, '') : '';
+const pathname = basePath && window.location.pathname.startsWith(basePath)
+  ? window.location.pathname.slice(basePath.length) || '/'
+  : window.location.pathname;
 const isPlayerPage = pathname.startsWith('/player');
 const isAdminPage = pathname.startsWith('/admin');
 const isRosterPage = pathname.startsWith('/roster');
@@ -40,15 +47,17 @@ const RootComponent = isPlayerPage
 
 root.render(
   <React.StrictMode>
-    {isAdminPage ? (
-      <AdminDashboard />
-    ) : (
-      <LanguageProvider>
-        <MainLayout>
-          <RootComponent />
-        </MainLayout>
-      </LanguageProvider>
-    )}
+    <ErrorBoundary>
+      {isAdminPage ? (
+        <AdminDashboard />
+      ) : (
+        <LanguageProvider>
+          <MainLayout>
+            <RootComponent />
+          </MainLayout>
+        </LanguageProvider>
+      )}
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
