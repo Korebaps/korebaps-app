@@ -8,6 +8,7 @@ import ActiveRosterPage from './pages/ActiveRosterPage.tsx';
 import GameRecordsPage from './pages/GameRecordsPage.tsx';
 import GameDetailPage from './pages/GameDetailPage.tsx';
 import PlayerComparisonPage from './pages/PlayerComparisonPage.tsx';
+import GuidePage from './pages/GuidePage.tsx';
 import Videos from './Videos.tsx';
 import MainLayout from './components/MainLayout.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
@@ -29,6 +30,7 @@ const isGamesPage = pathname.startsWith('/games');
 const isGameDetailPage = pathname.startsWith('/game');
 const isMediaPage = pathname.startsWith('/media');
 const isComparePage = pathname.startsWith('/compare');
+const isGuidePage = pathname.startsWith('/guide');
 const RootComponent = isPlayerPage
   ? PlayerDetailPage
   : isAdminPage
@@ -43,7 +45,9 @@ const RootComponent = isPlayerPage
             ? Videos
             : isComparePage
               ? PlayerComparisonPage
-              : App;
+              : isGuidePage
+                ? GuidePage
+                : App;
 
 root.render(
   <React.StrictMode>
