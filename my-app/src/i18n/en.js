@@ -34,6 +34,7 @@ const en = {
   'common.refresh': 'Refresh',
   'common.exportCSV': 'Export CSV',
   'common.myStats': 'My Stats',
+  'common.pinPlayerPrompt': 'Pin your player from the Roster to see your stats here',
   'suffix.players': '',
   'suffix.games': ' games',
 
@@ -42,6 +43,7 @@ const en = {
   'app.subtitle': 'Korebaps Stats Dashboard',
   'app.latestGame': 'Latest Game',
   'app.registeredPlayers': 'Players',
+  'app.games': 'Games',
   'app.seasonSelect': 'Select Season',
   'app.loadingSeasons': 'Loading seasons...',
   'app.searchPlayer': 'Search player...',

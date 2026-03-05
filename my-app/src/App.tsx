@@ -614,6 +614,7 @@ function MainDashboard() {
             },
             { label: t('app.registeredPlayers'), value: `${battingRecords.length}${t('suffix.players')}` },
           ]}
+          showMyStatsCard
           social={(
             <>
               <a

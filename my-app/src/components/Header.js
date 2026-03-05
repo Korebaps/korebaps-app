@@ -32,7 +32,7 @@ function markRecorded() {
   try { localStorage.setItem(THROTTLE_KEY, String(Date.now())); } catch (e) { /* */ }
 }
 
-export default function Header({ logoSrc, title, subtitle, stats, action, social }) {
+export default function Header({ logoSrc, title, subtitle, stats, action, social, showMyStatsCard }) {
   var ctx = useLanguage();
   var lang = ctx.lang;
   var setLang = ctx.setLang;
@@ -128,10 +128,10 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
         </div>
       </div>
 
-      {/* Row 2: Social links + Nav buttons */}
-      {(social || action || myPlayer) ? (
+      {/* Row 2: Social links + Nav buttons (My Stats moved to card when showMyStatsCard) */}
+      {(social || action || (myPlayer && !showMyStatsCard)) ? (
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          {myPlayer ? (
+          {myPlayer && !showMyStatsCard ? (
             <button
               type="button"
               onClick={function () {
@@ -158,6 +158,35 @@ export default function Header({ logoSrc, title, subtitle, stats, action, social
             </div>
           );
         })}
+        {showMyStatsCard ? (
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-3 sm:p-4 flex flex-col justify-center min-h-[4.5rem]">
+            {myPlayer ? (
+              <button
+                type="button"
+                onClick={function () {
+                  var params = new URLSearchParams({ playerNumber: myPlayer.playerNumber, playerName: myPlayer.playerName });
+                  window.location.href = '/player?' + params.toString();
+                }}
+                className="text-left w-full group"
+              >
+                <p className="text-xs text-gray-400">{t('common.myStats')}</p>
+                <p className="text-lg sm:text-xl font-bold text-[#daaa00] group-hover:underline truncate">
+                  #{myPlayer.playerNumber} {myPlayer.playerName}
+                </p>
+              </button>
+            ) : (
+              <a
+                href="/roster"
+                className="text-left w-full block group"
+              >
+                <p className="text-xs text-gray-400">{t('common.myStats')}</p>
+                <p className="text-sm text-amber-200/90 group-hover:text-[#daaa00] transition leading-tight">
+                  {t('common.pinPlayerPrompt')}
+                </p>
+              </a>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Row 4: Visitor counter */}

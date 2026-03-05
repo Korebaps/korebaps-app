@@ -34,6 +34,7 @@ const ko = {
   'common.refresh': '새로고침',
   'common.exportCSV': 'CSV 내보내기',
   'common.myStats': '내 기록',
+  'common.pinPlayerPrompt': '로스터에서 선수를 고정하면 여기서 기록을 볼 수 있습니다',
   'suffix.players': '명',
   'suffix.games': '경기',
 
@@ -42,6 +43,7 @@ const ko = {
   'app.subtitle': 'Korebaps Stats Dashboard',
   'app.latestGame': '최근 경기',
   'app.registeredPlayers': '등록 선수',
+  'app.games': '경기',
   'app.seasonSelect': '시즌 선택',
   'app.loadingSeasons': '시즌 로딩 중...',
   'app.searchPlayer': '선수 검색...',
