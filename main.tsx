@@ -23,12 +23,14 @@ export interface BattingRecord {
   strikeouts: number;
   stolenBases: number;
   isMVP: boolean;
+  /** Season total from API (DB); preferred for Score */
+  score?: number;
 }
 
 export interface PitchingRecord {
   id: string;
   playerName: string;
-  inningsPitched: number;
+  inningsPitched: number | string;
   wins: number;
   strikeouts: number;
   runsAllowed: number;
@@ -59,6 +61,51 @@ type BattingStatsApiRow = {
   total_sb: number;
   total_batting_points: number;
 };
+
+function outsFromBaseballIpDisplay(ip: string | number | null | undefined): number {
+  if (ip === null || ip === undefined || ip === '') return 0;
+  const s = String(ip).trim();
+  const dot = s.indexOf('.');
+  if (dot === -1) {
+    const n = Number(s);
+    return Number.isFinite(n) ? n * 3 : 0;
+  }
+  const whole = Number(s.slice(0, dot)) || 0;
+  const afterDot = s.slice(dot + 1);
+  const fracDigit = afterDot.length ? Number(afterDot[0]) : 0;
+  const outsPartial = fracDigit >= 0 && fracDigit <= 2 ? fracDigit : 0;
+  return whole * 3 + outsPartial;
+}
+
+function calculateBattingScoreKorebaps(record: BattingRecord): number {
+  let score = 0;
+  score += record.singles * 1;
+  score += record.doubles * 2;
+  score += record.triples * 3;
+  score += record.homeRuns * 5;
+  score += record.runs * 1;
+  score += record.rbi * 2;
+  score += record.walks * 0.5;
+  score += record.hitByPitch * 0.5;
+  score += record.stolenBases * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
+
+function calculatePitchingScoreKorebaps(record: PitchingRecord): number {
+  const outs = outsFromBaseballIpDisplay(record.inningsPitched);
+  const innings = outs / 3;
+  let score = 0;
+  score += innings * 3;
+  score += record.wins * 5;
+  score += record.strikeouts * 1;
+  score -= record.runsAllowed * 2;
+  score -= record.earnedRuns * 1;
+  score -= record.walks * 1;
+  score -= record.hitsAllowed * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
 
 function MainDashboard() {
   const [battingRecords, setBattingRecords] = useState<BattingRecord[]>([]);
@@ -94,6 +141,7 @@ function MainDashboard() {
           strikeouts: Number(row.total_strikeouts) || 0,
           stolenBases: Number(row.total_sb) || 0,
           isMVP: false,
+          score: Number(row.total_batting_points) || undefined,
         }));
 
         setBattingRecords(mapped);
@@ -126,34 +174,14 @@ function MainDashboard() {
     return (totalBases / record.atBats).toFixed(3);
   };
 
-  const calculateBattingScore = (record: BattingRecord) => {
-    let score = 0;
-    score += record.singles * 1;
-    score += record.doubles * 2;
-    score += record.triples * 3;
-    score += record.homeRuns * 5;
-    score += record.runs * 1;
-    score += record.rbi * 1;
-    score += record.walks * 0.5;
-    score += record.hitByPitch * 0.5;
-    score += record.stolenBases * 1;
-    if (record.isMVP) score += 5;
-    return score;
-  };
+  const calculateBattingScore = (record: BattingRecord) => calculateBattingScoreKorebaps(record);
 
-  const calculatePitchingScore = (record: PitchingRecord) => {
-    let score = 0;
-    score += record.inningsPitched * 1;
-    score += record.wins * 10;
-    score += record.strikeouts * 2;
-    score -= record.earnedRuns * 0.5;
-    if (record.isMVP) score += 5;
-    return Math.max(0, score);
-  };
+  const calculatePitchingScore = (record: PitchingRecord) => calculatePitchingScoreKorebaps(record);
 
   const calculateERA = (record: PitchingRecord) => {
-    if (record.inningsPitched === 0) return '-.--';
-    return ((record.earnedRuns * 9) / record.inningsPitched).toFixed(2);
+    const inn = outsFromBaseballIpDisplay(record.inningsPitched) / 3;
+    if (inn === 0) return '-.--';
+    return ((record.earnedRuns * 9) / inn).toFixed(2);
   };
 
   return (
@@ -240,7 +268,7 @@ function MainDashboard() {
                         <td className="py-2 px-2 text-center text-[#daaa00]">{calculateSLG(record)}</td>
                         <td className="py-2 px-2 text-center font-bold text-black">
                           <span className="bg-[#daaa00] rounded px-2 py-1 inline-block">
-                            {calculateBattingScore(record)}
+                            {record.score ?? calculateBattingScore(record)}
                           </span>
                         </td>
                       </tr>
@@ -360,34 +388,14 @@ function AdminDashboard() {
     return (totalBases / record.atBats).toFixed(3);
   };
 
-  const calculateBattingScore = (record: BattingRecord) => {
-    let score = 0;
-    score += record.singles * 1;
-    score += record.doubles * 2;
-    score += record.triples * 3;
-    score += record.homeRuns * 5;
-    score += record.runs * 1;
-    score += record.rbi * 1;
-    score += record.walks * 0.5;
-    score += record.hitByPitch * 0.5;
-    score += record.stolenBases * 1;
-    if (record.isMVP) score += 5;
-    return score;
-  };
+  const calculateBattingScore = (record: BattingRecord) => calculateBattingScoreKorebaps(record);
 
-  const calculatePitchingScore = (record: PitchingRecord) => {
-    let score = 0;
-    score += record.inningsPitched * 1;
-    score += record.wins * 10;
-    score += record.strikeouts * 2;
-    score -= record.earnedRuns * 0.5;
-    if (record.isMVP) score += 5;
-    return Math.max(0, score);
-  };
+  const calculatePitchingScore = (record: PitchingRecord) => calculatePitchingScoreKorebaps(record);
 
   const calculateERA = (record: PitchingRecord) => {
-    if (record.inningsPitched === 0) return '-.--';
-    return ((record.earnedRuns * 9) / record.inningsPitched).toFixed(2);
+    const inn = outsFromBaseballIpDisplay(record.inningsPitched) / 3;
+    if (inn === 0) return '-.--';
+    return ((record.earnedRuns * 9) / inn).toFixed(2);
   };
 
   const downloadAsCSV = () => {
@@ -398,7 +406,7 @@ function AdminDashboard() {
       csv += '#,선수명,PA,AB,1B,2B,3B,HR,R,RBI,BB,HBP,SO,SB,타율,출루율,장타율,MVP,Score\n';
       battingRecords.forEach(record => {
         const hits = record.singles + record.doubles + record.triples + record.homeRuns;
-        csv += `${record.playerNumber},${record.playerName},${record.plateAppearances},${record.atBats},${record.singles},${record.doubles},${record.triples},${record.homeRuns},${record.runs},${record.rbi},${record.walks},${record.hitByPitch},${record.strikeouts},${record.stolenBases},${calculateBattingAvg(record)},${calculateOBP(record)},${calculateSLG(record)},${record.isMVP ? 'MVP' : ''},${calculateBattingScore(record)}\n`;
+        csv += `${record.playerNumber},${record.playerName},${record.plateAppearances},${record.atBats},${record.singles},${record.doubles},${record.triples},${record.homeRuns},${record.runs},${record.rbi},${record.walks},${record.hitByPitch},${record.strikeouts},${record.stolenBases},${calculateBattingAvg(record)},${calculateOBP(record)},${calculateSLG(record)},${record.isMVP ? 'MVP' : ''},${record.score ?? calculateBattingScore(record)}\n`;
       });
       csv += '\n';
     }
@@ -593,7 +601,7 @@ function AdminDashboard() {
                             </div>
                           </div>
                           <div className="bg-[#daaa00] rounded px-3 py-2 ml-2">
-                            <span className="text-black text-sm font-medium">Score:</span> <span className="font-bold text-black text-lg">{calculateBattingScore(record)}</span>
+                            <span className="text-black text-sm font-medium">Score:</span> <span className="font-bold text-black text-lg">{record.score ?? calculateBattingScore(record)}</span>
                           </div>
                         </div>
                       </div>

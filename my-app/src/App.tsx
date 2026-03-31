@@ -61,6 +61,8 @@ type BattingRecord = {
   isMVP: boolean;
   war: string;
   isActive: boolean;
+  /** Season total from DB (sum of per-game batting_points); preferred for Score display */
+  score?: number;
 };
 
 type GameRecord = {
@@ -115,6 +117,51 @@ const mapApiNumber = (value?: number | string | null) => {
   return Number.isNaN(numeric) ? undefined : numeric;
 };
 
+/** Baseball IP from API: "7.2" = 7 innings + 2 outs (matches MySQL concat of outs). */
+function outsFromBaseballIpDisplay(ip: string | number | null | undefined): number {
+  if (ip === null || ip === undefined || ip === '') return 0;
+  const s = String(ip).trim();
+  const dot = s.indexOf('.');
+  if (dot === -1) {
+    const n = Number(s);
+    return Number.isFinite(n) ? n * 3 : 0;
+  }
+  const whole = Number(s.slice(0, dot)) || 0;
+  const afterDot = s.slice(dot + 1);
+  const fracDigit = afterDot.length ? Number(afterDot[0]) : 0;
+  const outsPartial = fracDigit >= 0 && fracDigit <= 2 ? fracDigit : 0;
+  return whole * 3 + outsPartial;
+}
+
+function calculatePitchingScoreKorebaps(record: PitchingRecord): number {
+  const outs = outsFromBaseballIpDisplay(record.inningsPitched);
+  const innings = outs / 3;
+  let score = 0;
+  score += innings * 3;
+  score += (record.wins ?? 0) * 5;
+  score += (record.strikeouts ?? 0) * 1;
+  score -= (record.runsAllowed ?? 0) * 2;
+  score -= (record.earnedRuns ?? 0) * 1;
+  score -= (record.walks ?? 0) * 1;
+  score -= (record.hitsAllowed ?? 0) * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
+
+function calculateBattingScoreKorebaps(record: BattingRecord): number {
+  let score = 0;
+  score += (record.singles ?? 0) * 1;
+  score += (record.doubles ?? 0) * 2;
+  score += (record.triples ?? 0) * 3;
+  score += (record.homeRuns ?? 0) * 5;
+  score += (record.runs ?? 0) * 1;
+  score += (record.rbi ?? 0) * 2;
+  score += (record.walks ?? 0) * 0.5;
+  score += (record.hitByPitch ?? 0) * 0.5;
+  score += (record.stolenBases ?? 0) * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
 
 
 function MainDashboard() {
@@ -246,6 +293,7 @@ function MainDashboard() {
           isMVP: false,
           war: row.season_owar ? Number(row.season_owar).toFixed(3) : '0.000',
           isActive: row.is_active === 1,
+          score: mapApiNumber(row.total_batting_points),
         }));
 
         setBattingRecords(mapped);
@@ -360,28 +408,10 @@ function MainDashboard() {
     return (obp + slg).toFixed(3);
   };
 
-  const calculateBattingScore = (record: BattingRecord) => {
-    let score = 0;
-    score += (record.singles ?? 0) * 1;
-    score += (record.doubles ?? 0) * 2;
-    score += (record.triples ?? 0) * 3;
-    score += (record.homeRuns ?? 0) * 5;
-    score += (record.runs ?? 0) * 1;
-    score += (record.rbi ?? 0) * 1;
-    score += (record.walks ?? 0) * 0.5;
-    score += (record.hitByPitch ?? 0) * 0.5;
-    score += (record.stolenBases ?? 0) * 1;
-    if (record.isMVP) score += 5;
-    return score;
-  };
+  const calculateBattingScore = (record: BattingRecord) => calculateBattingScoreKorebaps(record);
 
-  const calculatePitchingScore = (record: PitchingRecord) => {
-    let score = 0;
-    score += (record.wins ?? 0) * 10;
-    score += (record.strikeouts ?? 0) * 2;
-    score -= (record.earnedRuns ?? 0) * 0.5;
-    return Math.max(0, score);
-  };
+  const calculatePitchingScore = (record: PitchingRecord) =>
+    calculatePitchingScoreKorebaps(record);
 
 
 
@@ -407,7 +437,7 @@ function MainDashboard() {
       obp: calculateOBP(record),
       slg: calculateSLG(record),
       ops: calculateOPS(record),
-      score: calculateBattingScore(record),
+      score: record.score ?? calculateBattingScore(record),
     })),
   [battingRecords]);
 

@@ -59,6 +59,71 @@ type WalkupSong = {
   album_art_url?: string | null;
 };
 
+function outsFromBaseballIpDisplay(ip: string | number | null | undefined): number {
+  if (ip === null || ip === undefined || ip === '') return 0;
+  const s = String(ip).trim();
+  const dot = s.indexOf('.');
+  if (dot === -1) {
+    const n = Number(s);
+    return Number.isFinite(n) ? n * 3 : 0;
+  }
+  const whole = Number(s.slice(0, dot)) || 0;
+  const afterDot = s.slice(dot + 1);
+  const fracDigit = afterDot.length ? Number(afterDot[0]) : 0;
+  const outsPartial = fracDigit >= 0 && fracDigit <= 2 ? fracDigit : 0;
+  return whole * 3 + outsPartial;
+}
+
+function calculatePitchingScoreKorebaps(record: {
+  inningsPitched?: string | number | null;
+  wins?: number;
+  strikeouts?: number;
+  runsAllowed?: number;
+  earnedRuns?: number;
+  hitsAllowed?: number;
+  walks?: number;
+  isMVP?: boolean;
+}): number {
+  const outs = outsFromBaseballIpDisplay(record.inningsPitched);
+  const innings = outs / 3;
+  let score = 0;
+  score += innings * 3;
+  score += (record.wins ?? 0) * 5;
+  score += (record.strikeouts ?? 0) * 1;
+  score -= (record.runsAllowed ?? 0) * 2;
+  score -= (record.earnedRuns ?? 0) * 1;
+  score -= (record.walks ?? 0) * 1;
+  score -= (record.hitsAllowed ?? 0) * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
+
+function calculateBattingScoreKorebaps(record: {
+  singles?: number;
+  doubles?: number;
+  triples?: number;
+  homeRuns?: number;
+  runs?: number;
+  rbi?: number;
+  walks?: number;
+  hitByPitch?: number;
+  stolenBases?: number;
+  isMVP?: boolean;
+}): number {
+  let score = 0;
+  score += (record.singles ?? 0) * 1;
+  score += (record.doubles ?? 0) * 2;
+  score += (record.triples ?? 0) * 3;
+  score += (record.homeRuns ?? 0) * 5;
+  score += (record.runs ?? 0) * 1;
+  score += (record.rbi ?? 0) * 2;
+  score += (record.walks ?? 0) * 0.5;
+  score += (record.hitByPitch ?? 0) * 0.5;
+  score += (record.stolenBases ?? 0) * 1;
+  if (record.isMVP) score += 5;
+  return score;
+}
+
 export default function AdminDashboard() {
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [adminAuthed, setAdminAuthed] = useState(false);
@@ -629,38 +694,14 @@ export default function AdminDashboard() {
     return (totalBases / record.atBats).toFixed(3);
   };
 
-  const calculateBattingScore = (record: any) => {
-    let score = 0;
-    score += record.singles * 1;
-    score += record.doubles * 2;
-    score += record.triples * 3;
-    score += record.homeRuns * 5;
-    score += record.runs * 1;
-    score += record.rbi * 1;
-    score += record.walks * 0.5;
-    score += record.hitByPitch * 0.5;
-    score += record.stolenBases * 1;
-    if (record.isMVP) score += 5;
-    return score;
-  };
+  const calculateBattingScore = (record: any) => calculateBattingScoreKorebaps(record);
 
   const calculateERA = (record: any) => {
     if (record.inningsPitched === 0) return '-.--';
     return ((record.earnedRuns * 9) / record.inningsPitched).toFixed(2);
   };
 
-  const calculatePitchingScore = (record: any) => {
-    let score = 0;
-    score += record.inningsPitched * 3;
-    score += record.wins * 5;
-    score += record.strikeouts * 1;
-    score -= record.runsAllowed * 2;
-    score -= record.earnedRuns * 1;
-    score -= record.walks * 1;
-    score -= record.hitsAllowed * 1;
-    if (record.isMVP) score += 5;
-    return score;
-  };
+  const calculatePitchingScore = (record: any) => calculatePitchingScoreKorebaps(record);
 
   const downloadAsCSV = () => {
     const seasonLabel = getCurrentSeasonLabel();

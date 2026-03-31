@@ -1,13 +1,13 @@
 import { useLanguage } from '../i18n/LanguageContext';
 
-// Aligned with server point calculation (server/index.js)
+// Aligned with MySQL batting_stats.batting_points (GENERATED column) and server/index.js
 const battingRows = [
   { label: '1B', points: '+1' },
   { label: '2B', points: '+2' },
   { label: '3B', points: '+3' },
   { label: 'HR', points: '+5' },
   { label: 'R', points: '+1' },
-  { label: 'RBI', points: '+1' },
+  { label: 'RBI', points: '+2' },
   { label: 'BB/HBP', points: '+0.5' },
   { label: 'SB', points: '+1' },
   { label: 'MVP', points: '+5' },

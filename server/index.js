@@ -165,7 +165,7 @@ const calculateBattingPoints = (payload) => {
   points += (payload.triples ?? 0) * 3;
   points += (payload.homeRuns ?? 0) * 5;
   points += (payload.runs ?? 0) * 1;
-  points += (payload.rbi ?? 0) * 1;
+  points += (payload.rbi ?? 0) * 2;
   points += (payload.walks ?? 0) * 0.5;
   points += (payload.hitByPitch ?? 0) * 0.5;
   points += (payload.stolenBases ?? 0) * 1;
