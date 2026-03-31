@@ -96,13 +96,10 @@ function calculatePitchingScoreKorebaps(record: PitchingRecord): number {
   const outs = outsFromBaseballIpDisplay(record.inningsPitched);
   const innings = outs / 3;
   let score = 0;
-  score += innings * 3;
+  score += innings * 1;
   score += record.wins * 5;
-  score += record.strikeouts * 1;
-  score -= record.runsAllowed * 2;
-  score -= record.earnedRuns * 1;
-  score -= record.walks * 1;
-  score -= record.hitsAllowed * 1;
+  score += record.strikeouts * 2;
+  score -= record.earnedRuns * 0.5;
   if (record.isMVP) score += 5;
   return score;
 }

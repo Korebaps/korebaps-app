@@ -177,20 +177,14 @@ const calculatePitchingPoints = (payload, outsRecorded) => {
   const innings = outsRecorded ? outsRecorded / 3 : 0;
   const wins = Number(payload.wins ?? 0) || 0;
   const strikeouts = Number(payload.strikeouts ?? 0) || 0;
-  const runsAllowed = Number(payload.runsAllowed ?? 0) || 0;
   const earnedRuns = Number(payload.earnedRuns ?? 0) || 0;
-  const hitsAllowed = Number(payload.hitsAllowed ?? 0) || 0;
-  const walks = Number(payload.walks ?? 0) || 0;
   const isMVP = payload.isMVP ? 1 : 0;
 
   let points = 0;
-  points += innings * 3;
+  points += innings * 1;
   points += wins * 5;
-  points += strikeouts * 1;
-  points -= runsAllowed * 2;
-  points -= earnedRuns * 1;
-  points -= walks * 1;
-  points -= hitsAllowed * 1;
+  points += strikeouts * 2;
+  points -= earnedRuns * 0.5;
   if (isMVP) points += 5;
 
   return points;

@@ -13,14 +13,15 @@ const battingRows = [
   { label: 'MVP', points: '+5' },
 ];
 
+// Aligned with MySQL pitching_stats.pitching_points (GENERATED) and server/index.js
 const pitchingRows = [
-  { label: 'IP', points: '+3 per inning' },
+  { label: 'IP', points: '+1 per inning' },
   { label: 'Win', points: '+5' },
-  { label: 'K', points: '+1' },
-  { label: 'RA', points: '-2' },
-  { label: 'ER', points: '-1' },
-  { label: 'BB', points: '-1' },
-  { label: 'H', points: '-1' },
+  { label: 'K', points: '+2' },
+  { label: 'ER', points: '-0.5' },
+  { label: 'RA', points: '0' },
+  { label: 'BB', points: '0' },
+  { label: 'H', points: '0' },
   { label: 'MVP', points: '+5' },
 ];
 

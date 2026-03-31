@@ -78,22 +78,16 @@ function calculatePitchingScoreKorebaps(record: {
   inningsPitched?: string | number | null;
   wins?: number;
   strikeouts?: number;
-  runsAllowed?: number;
   earnedRuns?: number;
-  hitsAllowed?: number;
-  walks?: number;
   isMVP?: boolean;
 }): number {
   const outs = outsFromBaseballIpDisplay(record.inningsPitched);
   const innings = outs / 3;
   let score = 0;
-  score += innings * 3;
+  score += innings * 1;
   score += (record.wins ?? 0) * 5;
-  score += (record.strikeouts ?? 0) * 1;
-  score -= (record.runsAllowed ?? 0) * 2;
-  score -= (record.earnedRuns ?? 0) * 1;
-  score -= (record.walks ?? 0) * 1;
-  score -= (record.hitsAllowed ?? 0) * 1;
+  score += (record.strikeouts ?? 0) * 2;
+  score -= (record.earnedRuns ?? 0) * 0.5;
   if (record.isMVP) score += 5;
   return score;
 }
