@@ -1560,6 +1560,47 @@ app.post('/api/games', requireAdmin, async (req, res) => {
   }
 });
 
+app.patch('/api/games/:gameId', requireAdmin, async (req, res) => {
+  try {
+    const gameId = Number(req.params.gameId);
+    if (!gameId || !Number.isFinite(gameId)) {
+      res.status(400).json({ error: 'Invalid gameId' });
+      return;
+    }
+
+    const parseNullableInt = (v) => {
+      if (v === undefined || v === null || v === '') return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : NaN;
+    };
+
+    const scoreNumber = parseNullableInt(req.body?.score);
+    const oppScoreNumber = parseNullableInt(req.body?.oppScore);
+
+    if (Number.isNaN(scoreNumber) || Number.isNaN(oppScoreNumber)) {
+      res.status(400).json({ error: 'Invalid score or oppScore' });
+      return;
+    }
+
+    const [gameRows] = await pool.execute('SELECT game_id FROM games WHERE game_id = ?', [gameId]);
+    if (!gameRows.length) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+
+    await pool.execute('UPDATE games SET score = ?, opp_score = ? WHERE game_id = ?', [
+      scoreNumber,
+      oppScoreNumber,
+      gameId,
+    ]);
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Failed to update game', error);
+    res.status(500).json({ error: 'Failed to update game' });
+  }
+});
+
 app.delete('/api/games/:gameId', requireAdmin, async (req, res) => {
   try {
     const gameId = Number(req.params.gameId);

@@ -197,6 +197,9 @@ export default function AdminDashboard() {
   const [showBattingEditor, setShowBattingEditor] = useState(true);
   const [showPitchingEditor, setShowPitchingEditor] = useState(true);
 
+  const [gameScoreDrafts, setGameScoreDrafts] = useState<Record<number, { s: string; o: string }>>({});
+  const [gameScoreSavingId, setGameScoreSavingId] = useState<number | null>(null);
+
   const authFetch = (url: string, options?: RequestInit) => {
     const baseHeaders: Record<string, string> = {
       ...(options?.headers as Record<string, string> | undefined),
@@ -380,6 +383,17 @@ export default function AdminDashboard() {
       loadGames();
     }
   }, [activeTab, selectedSeasonId, adminAuthed]);
+
+  useEffect(() => {
+    const next: Record<number, { s: string; o: string }> = {};
+    for (const g of games) {
+      next[g.game_id] = {
+        s: g.score != null ? String(g.score) : '',
+        o: g.opp_score != null ? String(g.opp_score) : '',
+      };
+    }
+    setGameScoreDrafts(next);
+  }, [games]);
 
   useEffect(() => {
     const loadPlayers = async () => {
@@ -973,6 +987,44 @@ export default function AdminDashboard() {
     } finally {
       setGameSaving(false);
       setGamesLoading(false);
+    }
+  };
+
+  const saveGameScore = async (gameId: number) => {
+    const draft = gameScoreDrafts[gameId];
+    if (!draft) return;
+
+    try {
+      setGameScoreSavingId(gameId);
+      setGamesError(null);
+
+      const response = await authFetch(`${API_BASE_URL}/api/games/${gameId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          score: draft.s.trim() === '' ? null : draft.s.trim(),
+          oppScore: draft.o.trim() === '' ? null : draft.o.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Failed to update score (${response.status})`);
+      }
+
+      const url = selectedSeasonId
+        ? `${API_BASE_URL}/api/games?${new URLSearchParams({ seasonId: String(selectedSeasonId) }).toString()}`
+        : `${API_BASE_URL}/api/games`;
+      const listResponse = await authFetch(url);
+      if (listResponse.ok) {
+        const data = (await listResponse.json()) as GameRecord[];
+        setGames(data);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setGamesError(message);
+    } finally {
+      setGameScoreSavingId(null);
     }
   };
 
@@ -1654,6 +1706,58 @@ export default function AdminDashboard() {
                                   기록 없음
                                 </span>
                               )}
+                            </div>
+                            <div
+                              className="mt-3 pt-2 border-t border-gray-700/50"
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                            >
+                              <div className="text-[10px] text-gray-500 mb-1">점수 수정</div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  className="w-16 px-2 py-1 text-sm bg-gray-900 border border-gray-600 rounded text-white"
+                                  placeholder="우리"
+                                  aria-label="우리 팀 점수"
+                                  value={gameScoreDrafts[g.game_id]?.s ?? ''}
+                                  onChange={(e) =>
+                                    setGameScoreDrafts((prev) => ({
+                                      ...prev,
+                                      [g.game_id]: {
+                                        s: e.target.value,
+                                        o: prev[g.game_id]?.o ?? '',
+                                      },
+                                    }))
+                                  }
+                                />
+                                <span className="text-gray-500">:</span>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  className="w-16 px-2 py-1 text-sm bg-gray-900 border border-gray-600 rounded text-white"
+                                  placeholder="상대"
+                                  aria-label="상대 팀 점수"
+                                  value={gameScoreDrafts[g.game_id]?.o ?? ''}
+                                  onChange={(e) =>
+                                    setGameScoreDrafts((prev) => ({
+                                      ...prev,
+                                      [g.game_id]: {
+                                        s: prev[g.game_id]?.s ?? '',
+                                        o: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => saveGameScore(g.game_id)}
+                                  disabled={gameScoreSavingId === g.game_id}
+                                  className="px-2.5 py-1 text-xs rounded bg-[#daaa00] text-black font-semibold hover:bg-yellow-500 disabled:opacity-50"
+                                >
+                                  {gameScoreSavingId === g.game_id ? '저장…' : '저장'}
+                                </button>
+                              </div>
                             </div>
                           </div>
                           <button
