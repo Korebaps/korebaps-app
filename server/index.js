@@ -83,7 +83,7 @@ app.post('/api/admin/login', (req, res) => {
   const password = req.body?.password;
 
   if (!ADMIN_PASSWORD) {
-    res.status(500).json({ error: 'Admin password not configured on server' });
+    res.status(500).json({ error: 'Admin password not configured' });
     return;
   }
 
