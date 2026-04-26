@@ -75,7 +75,7 @@ const requireAdmin = (req, res, next) => {
     next();
   } catch (error) {
     console.error('Admin auth middleware failed', error);
-    res.status(500).json({ error: 'Admin auth failed' });
+    res.status(500).json({ error: 'Admin authentication failed' });
   }
 };
 
